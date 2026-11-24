@@ -92,3 +92,9 @@ For distribution signing, set `CARTREST_CODESIGN_IDENTITY` to a Developer ID App
 | `docs/images/` | App screenshots |
 
 The editor and model share `dimensions.json`, and the A4 preview uses the same placement calculations as the PDF export. Command-line builds bundle a static `.icns` made from the Liquid Glass export. [Icon Composer project](design/icon/Cartrest.icon) · [SVG source](design/icon/Cartrest.svg) · [Icon editing and export](design/icon/README.md) · [Design notes](DESIGN.md)
+
+## Acknowledgments
+
+Thanks to **AF_Inventions** for sharing *Fun Cartridge* and its Nintendo DS coaster design, and to **magu** for publishing the dummy cartridge used as a reference for the original proportions. [Fun Cartridge on Cults](https://cults3d.com/en/3d-model/game/fun-cartridge-keychain-coasters-tray-more) · [Nintendo DS dummy cartridge on Cults](https://cults3d.com/en/3d-model/gadget/nintendo-ds-dummy-cartridge-ds-dsi-3ds-2ds)
+
+The example box covers and cartridge scans come from **LaunchBox Games Database**. Photos from **VGCollect** helped verify the cartridge labels. [LaunchBox Games Database](https://gamesdb.launchbox-app.com/) · [VGCollect](https://vgcollect.com/) · [Sources by game](examples/README.md)
