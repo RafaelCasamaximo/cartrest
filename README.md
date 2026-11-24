@@ -44,11 +44,15 @@ Print a test on plain paper at **Actual Size (100%)**, measure the 50 mm ruler, 
 
 ## Explore the cartridge in 3D
 
-Select **3D** and drag to orbit the cartridge. Scroll to zoom, then choose **Recenter** to restore the starting view. The preview uses the STL mesh, applies the selected artwork to the front recess, and shows the 17 recessed contact channels on the back.
+Select **3D** and drag to orbit the cartridge. Scroll to zoom, then choose **Recenter** to restore the starting view. The preview uses the STL mesh, applies the selected artwork to the front recess, and shows the 17 recessed contact channels on the back. Both front previews use the original cartridge labels.
 
-| Front | Back |
+| Pokémon Platinum Version | Kirby Super Star Ultra |
 | --- | --- |
-| ![Front of the cartridge in 3D with the selected artwork in its recess.](docs/images/cartridge-3d.png) | ![Back of the cartridge in 3D, showing the recessed contact channels.](docs/images/cartridge-back.png) |
+| ![3D cartridge with the Pokémon Platinum Version cartridge label.](docs/images/pokemon-platinum-3d.png) | ![3D cartridge with the Kirby Super Star Ultra cartridge label.](docs/images/kirby-super-star-ultra-3d.png) |
+
+<p align="center">
+  <img src="docs/images/cartridge-back.png" width="340" alt="Back of the cartridge, showing the 17 recessed contact channels.">
+</p>
 
 ## Print the coaster
 
