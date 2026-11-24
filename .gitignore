@@ -1,0 +1,10 @@
+.DS_Store
+__pycache__/
+*.pyc
+.venv/
+/.impeccable/
+/Cartrest.app/
+/dist/
+/.cartrest-compilacao.*
+/.cartrest-release.*
+/modelo/*mm/
