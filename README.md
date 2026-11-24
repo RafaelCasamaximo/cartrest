@@ -85,4 +85,4 @@ For distribution signing, set `CARTREST_CODESIGN_IDENTITY` to a Developer ID App
 | `print/` | Full-size example A4 sheet |
 | `docs/images/` | App screenshots |
 
-The editor and model share `dimensions.json`, and the A4 preview uses the same placement calculations as the PDF export. Command-line builds bundle a static `.icns` made from the Liquid Glass export. [Icon Composer project](design/icon/Cartrest.icon) · [SVG source](design/icon/Cartrest.svg) · [Icon editing and export](design/icon/README.md) · [Design notes](DESIGN.md) · [Name](NAMES.md)
+The editor and model share `dimensions.json`, and the A4 preview uses the same placement calculations as the PDF export. Command-line builds bundle a static `.icns` made from the Liquid Glass export. [Icon Composer project](design/icon/Cartrest.icon) · [SVG source](design/icon/Cartrest.svg) · [Icon editing and export](design/icon/README.md) · [Design notes](DESIGN.md)
