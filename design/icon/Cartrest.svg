@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024" role="img" aria-labelledby="title description">
+  <title id="title">Cartrest</title>
+  <desc id="description">A mint-green cartridge with a lifted vinyl corner on a dark cutting mat.</desc>
+  <defs>
+    <linearGradient id="mat" x1="0.14" y1="0.04" x2="0.88" y2="0.98">
+      <stop stop-color="#285B4C"/>
+      <stop offset=".58" stop-color="#183F35"/>
+      <stop offset="1" stop-color="#102C26"/>
+    </linearGradient>
+    <linearGradient id="plastic" x1="0.17" y1=".05" x2=".86" y2="1">
+      <stop stop-color="#CEEFCE"/>
+      <stop offset=".49" stop-color="#85C8AA"/>
+      <stop offset="1" stop-color="#609E86"/>
+    </linearGradient>
+    <linearGradient id="vinyl" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#255C4A"/>
+      <stop offset="1" stop-color="#14392F"/>
+    </linearGradient>
+    <linearGradient id="peel" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#FCFFD9"/>
+      <stop offset="1" stop-color="#AFE2BA"/>
+    </linearGradient>
+    <clipPath id="mat-edge">
+      <rect x="98" y="98" width="828" height="828" rx="190"/>
+    </clipPath>
+    <filter id="cartridge-shadow" x="-.3" y="-.25" width="1.6" height="1.65" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="21" stdDeviation="24" flood-color="#081C16" flood-opacity=".5"/>
+    </filter>
+  </defs>
+
+  <rect x="98" y="98" width="828" height="828" rx="190" fill="url(#mat)"/>
+  <g clip-path="url(#mat-edge)" fill="none" stroke="#83B59B" stroke-width="2" opacity=".21">
+    <path d="M98 236H926M98 374H926M98 512H926M98 650H926M98 788H926"/>
+    <path d="M236 98V926M374 98V926M512 98V926M650 98V926M788 98V926"/>
+  </g>
+  <rect x="100" y="100" width="824" height="824" rx="188" fill="none" stroke="#9BC9AF" stroke-opacity=".31" stroke-width="4"/>
+
+  <g transform="rotate(-13 512 512)">
+    <path d="M324 234H700Q743 234 743 277V737Q743 788 692 788H377Q281 788 281 692V277Q281 234 324 234Z"
+          transform="translate(11 14)" fill="#326B58" filter="url(#cartridge-shadow)"/>
+    <path d="M324 234H700Q743 234 743 277V737Q743 788 692 788H377Q281 788 281 692V277Q281 234 324 234Z"
+          fill="url(#plastic)" stroke="#D7F3D4" stroke-opacity=".73" stroke-width="3"/>
+    <path d="M362 286H662Q696 286 696 320V561L608 654H402L328 580V320Q328 286 362 286Z"
+          fill="url(#vinyl)" stroke="#457863" stroke-width="4"/>
+    <path d="M608 654V586Q608 561 633 561H696Z" fill="url(#peel)"/>
+    <path d="M511 741L482 716Q478 712 484 712H538Q544 712 540 716Z" fill="#275443"/>
+  </g>
+</svg>

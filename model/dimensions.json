@@ -1,0 +1,47 @@
+{
+  "unit": "mm",
+  "body": {
+    "width": 100.0,
+    "height": 106.06,
+    "thickness": 6,
+    "cornerRadii": {
+      "topLeft": 3.0,
+      "topRight": 3.0,
+      "bottomRight": 2.0,
+      "bottomLeft": 9.0
+    }
+  },
+  "recess": {
+    "x": 8.7,
+    "y": 6.2,
+    "width": 82.6,
+    "height": 87.2,
+    "radius": 3.9,
+    "chamfer": 7.7343,
+    "depth": 0.6
+  },
+  "label": {
+    "x": 9.1,
+    "y": 6.6,
+    "width": 81.8,
+    "height": 86.4,
+    "radius": 3.5,
+    "chamfer": 7.5
+  },
+  "arrow": {
+    "centerX": 50.0,
+    "top": 97.6,
+    "width": 10.0,
+    "height": 4.0,
+    "depth": 0.4
+  },
+  "contactChannels": {
+    "x": 16.5,
+    "y": 93.56,
+    "count": 17,
+    "width": 3.0,
+    "pitch": 4.0,
+    "length": 12.5,
+    "depth": 0.9
+  }
+}

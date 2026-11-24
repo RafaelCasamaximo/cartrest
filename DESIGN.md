@@ -1,89 +1,90 @@
 ---
 name: Cartrest
-description: "Editor nativo de adesivos sobre uma prancheta em milímetros."
+description: "A native label editor with a cutting mat measured in millimeters."
 colors:
-  janela-clara: "#F4F5F0"
-  janela-escura: "#18211F"
-  inspetor-claro: "#EAF0E9"
-  inspetor-escuro: "#202B27"
-  rodape-claro: "#E3EBE3"
-  rodape-escuro: "#26332E"
-  selecao-clara: "#D4E8D9"
-  selecao-escura: "#31493E"
-  contorno-selecao-claro: "#82A995"
-  contorno-selecao-escuro: "#5B856E"
-  divisor-claro: "#C4D3C9"
-  divisor-escuro: "#3B4D45"
-  acento-claro: "#24664B"
-  acento-escuro: "#29734F"
-  destaque-claro: "#2A593F"
-  destaque-escuro: "#BBDBBF"
-  tapete-luz: "rgb(10.5% 24% 19%)"
-  tapete-centro: "rgb(7.5% 20% 16%)"
-  tapete-sombra: "rgb(4.9% 15% 13%)"
-  grade-e-cotas: "rgb(68% 82% 74%)"
-  grafite-luz: "rgb(32% 36% 37%)"
-  grafite-sombra: "rgb(13% 17% 19%)"
-  visor-claro: "rgb(83% 88% 70%)"
-  visor-sombra: "rgb(64% 73% 50%)"
-  tinta-do-visor: "rgb(11% 19% 10%)"
+  window-light: "#F4F5F0"
+  window-dark: "#18211F"
+  inspector-light: "#EAF0E9"
+  inspector-dark: "#202B27"
+  footer-light: "#E3EBE3"
+  footer-dark: "#26332E"
+  selection-light: "#D4E8D9"
+  selection-dark: "#31493E"
+  selection-border-light: "#82A995"
+  selection-border-dark: "#5B856E"
+  divider-light: "#C4D3C9"
+  divider-dark: "#3B4D45"
+  accent-light: "#24664B"
+  accent-dark: "#29734F"
+  accent-text-light: "#2A593F"
+  accent-text-dark: "#BBDBBF"
+  mat-highlight: "rgb(10.5% 24% 19%)"
+  mat-center: "rgb(7.5% 20% 16%)"
+  mat-shadow: "rgb(4.9% 15% 13%)"
+  grid-and-dimensions: "rgb(68% 82% 74%)"
+  graphite-highlight: "rgb(32% 36% 37%)"
+  graphite-shadow: "rgb(13% 17% 19%)"
+  display-highlight: "rgb(83% 88% 70%)"
+  display-shadow: "rgb(64% 73% 50%)"
+  display-ink: "rgb(11% 19% 10%)"
 typography:
-  medida:
+  measurement:
     fontFamily: "SF Mono"
     fontSize: "15pt"
     fontWeight: 600
-  rotulo-medida:
+  measurement-label:
     fontFamily: "SF Pro"
     fontSize: "11pt"
     fontWeight: 500
 rounded:
-  gabinete-do-visor: "17pt"
-  tela-do-visor: "9pt"
-  item-de-arte: "8pt"
-  miniatura: "6pt"
+  display-housing: "17pt"
+  display-screen: "9pt"
+  artwork-row: "8pt"
+  thumbnail: "6pt"
 spacing:
-  recuo-inspetor: "17pt"
-  recuo-rodape: "16pt"
-  margem-inferior-do-visor: "24pt"
+  inspector-inset: "17pt"
+  footer-inset: "16pt"
+  display-bottom-margin: "24pt"
 components:
-  visor-de-medidas:
-    rounded: "{rounded.gabinete-do-visor}"
+  measurement-display:
+    rounded: "{rounded.display-housing}"
     height: "72pt"
     padding: "10pt 12pt"
-  item-de-arte:
-    rounded: "{rounded.item-de-arte}"
+  artwork-row:
+    rounded: "{rounded.artwork-row}"
     padding: "6pt"
-  miniatura:
-    rounded: "{rounded.miniatura}"
+  thumbnail:
+    rounded: "{rounded.thumbnail}"
     size: "38pt"
 ---
 
-# Aparência do Cartrest
+# Cartrest design
 
 ## Overview
 
-O tapete ocupa o painel esquerdo de ponta a ponta. A arte fica no cartucho e as cotas aparecem no visor flutuante. O inspetor à direita reúne modos de prévia, artes, enquadramento e impressão, com as ações de exportação no rodapé.
+The cutting mat fills the left pane. The cartridge carries the artwork, and a floating display shows the physical dimensions. The right inspector contains preview modes, the artwork list, framing and print controls, and export actions in its footer.
 
 ## Colors
 
-`AparenciaCartrest` acompanha o modo claro ou escuro do macOS. O verde dá ênfase à seleção da arte, aos dados principais e à ação de exportar PDF. Janela, inspetor e rodapé usam tons próprios, separados por divisores de 1 pt. Os textos correntes usam as cores semânticas do sistema.
+`CartrestTheme` follows macOS light and dark appearance. Green highlights the artwork selection, key readings, and the PDF export action. The window, inspector, and footer use distinct surface tones with 1 pt dividers. Body text uses macOS semantic colors.
 
-O tapete usa um gradiente verde diagonal nos dois modos. O cartucho tem um gradiente grafite, a folha A4 é branca e o visor tem fundo verde-claro com tinta escura.
+The mat uses a diagonal green gradient in both appearances. The cartridge has a graphite finish, the A4 sheet is white, and the measurement display uses dark lettering on a pale green screen.
 
 ## Typography
 
-As medidas do visor usam o estilo monoespaçado do sistema. Os cabeçalhos do inspetor, subtítulos e legendas usam `headline`, `subheadline` e `caption` do SwiftUI. Os totais usam dígitos tabulares.
+The display uses monospaced figures for measurements. Inspector headings, subtitles, and captions use the SwiftUI `headline`, `subheadline`, and `caption` styles. Totals use tabular figures.
 
 ## Layout
 
-O `HSplitView` permite ajustar a divisão. A janela abre em 1180 × 790 pt, com mínimo de 800 × 610 pt. A prancheta tem mínimo de 470 pt de largura e o inspetor varia de 320 a 420 pt. O visor fica a 24 pt da borda inferior do tapete. A área de desenho reserva espaço para manter a peça e o papel acima do visor.
+The `HSplitView` divider can be adjusted. The window opens at 1180 × 790 pt, with a minimum size of 800 × 610 pt. The left preview is at least 470 pt wide, and the right inspector ranges from 320 to 420 pt. The display floats 24 pt above the bottom of the mat. The artwork drawing area reserves clearance for the display, and the inspector scrolls above the export footer.
 
 ## Elevation & Depth
 
-O tom diferencia as áreas do inspetor. Na prancheta, sombras separam o cartucho e a folha do tapete. O rebaixo da peça aparece em grafite escuro. O visor tem carcaça sombreada, tela rebaixada e parafusos de acabamento.
+Surface tones distinguish the inspector sections. Shadows lift the cartridge and sheet off the mat. The cartridge recess darkens the graphite surface. The measurement display has a shaded housing, a recessed screen, and visible screws.
 
 ## Components
 
-- **Prancheta.** O `Canvas` usa uma grade de 5 e 20 mm nas vistas da peça e do corte. Os traços têm 0,65 pt, com opacidades de 10% e 17%. A grade acompanha a escala do desenho e omite intervalos menores que 3 pt. A vista A4 apresenta a régua de 50 mm. As medidas da peça, do corte e da arte com sangria aparecem no visor.
-- **Controles.** O seletor segmentado alterna entre peça, corte, folha A4 e a órbita 3D. Ajustes usam sliders, campos numéricos, menus e stepper do macOS. O PDF usa um botão `borderedProminent` com a cor de realce do tema. O PNG usa um botão padrão.
-- **Artes.** A linha selecionada recebe preenchimento e contorno do tema. A miniatura mantém o recorte quadrado e o nome aparece em uma linha.
+- **Preview.** The canvas uses a 5 mm and 20 mm grid in the coaster and cut views. Strokes are 0.65 pt at 10% and 17% opacity. The grid scales with the drawing and omits intervals below 3 pt. The A4 view includes a 50 mm ruler. The front artwork and the rear contact channels are visible as the cartridge rotates in 3D.
+- **Measurement display.** Readings cover the coaster, cut size, and artwork size including bleed.
+- **Controls.** The segmented picker switches between **On the coaster**, **Cut**, **A4 sheet**, and **3D**. The inspector uses native sliders, number fields, menus, and steppers. PDF export uses a tinted `borderedProminent` button, and PNG export uses a standard button.
+- **Artwork.** The selected row has a tinted fill and outline. Each image has a square thumbnail and a single-line name.

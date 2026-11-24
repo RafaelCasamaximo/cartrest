@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <title>Vinyl label</title>
+  <path transform="rotate(-13 512 512)" fill="#1F5444"
+        d="M362 286H662Q696 286 696 320V561L608 654H402L328 580V320Q328 286 362 286Z"/>
+</svg>

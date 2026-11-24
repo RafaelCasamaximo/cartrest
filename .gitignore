@@ -5,6 +5,6 @@ __pycache__/
 /.impeccable/
 /Cartrest.app/
 /dist/
-/.cartrest-compilacao.*
+/.cartrest-build.*
 /.cartrest-release.*
-/modelo/*mm/
+/model/*mm/

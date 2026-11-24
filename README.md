@@ -1,79 +1,85 @@
 <p align="center">
-  <img src="docs/imagens/cartrest.png" width="96" height="96" alt="">
+  <img src="docs/images/cartrest.png" width="96" height="96" alt="">
 </p>
 
 <h1 align="center">Cartrest</h1>
 
-<p align="center">Porta-copos de cartucho DS e um editor nativo de adesivos para macOS.</p>
+<p align="center">A Nintendo DS–inspired coaster and a native macOS editor for print-ready vinyl labels.</p>
 
 <p align="center">
-  <strong><a href="https://github.com/RafaelCasamaximo/cartrest/releases/latest">Baixar para macOS</a></strong>
-  · macOS 14 ou posterior · Apple Silicon e Intel
+  <strong><a href="https://github.com/RafaelCasamaximo/cartrest/releases/latest">Download for macOS</a></strong>
+  · macOS 14 or later · Apple Silicon and Intel
 </p>
 
-![Cartrest com a arte Maré Alta sobre a prévia de um cartucho grafite, controles à direita e visor flutuante de medidas.](docs/imagens/editor.png)
+![The Cartrest editor with High Tide artwork on a graphite cartridge, a floating measurement display on the left, and editing controls on the right.](docs/images/editor.png)
 
-Cartrest reúne um modelo 3D para imprimir em PLA e um editor em SwiftUI para montar o adesivo vinílico que encaixa no rebaixo da peça. O editor transforma suas capas, fotos ou desenhos em um **PDF A4 em escala real**, com sangria, linha de corte e régua de conferência.
+Cartrest pairs a 3D-printable coaster with a SwiftUI editor for labels that fit its recess. Crop artwork on the coaster, arrange copies on an A4 sheet, and export a **full-scale PDF** with bleed, a vector cut line, and a 50 mm reference ruler.
 
-## Instalar no macOS
+## Install on macOS
 
-1. Baixe o arquivo `Cartrest-1.0.0-macOS-universal.dmg`. [GitHub Releases](https://github.com/RafaelCasamaximo/cartrest/releases/latest)
-2. Abra o DMG e arraste **Cartrest** para **Aplicativos**.
-3. Ejete a imagem de disco e abra o Cartrest pelo Finder.
+1. Download `Cartrest-1.1.0-macOS-universal.dmg`. [GitHub Releases](https://github.com/RafaelCasamaximo/cartrest/releases/latest)
+2. Open the disk image and drag **Cartrest** to **Applications**.
+3. Eject the disk image and open Cartrest from Finder.
 
-O aplicativo deste pacote tem assinatura ad hoc. A distribuição notarizada usa uma identidade Developer ID e o serviço de notarização da Apple. [Distribuição no macOS](https://developer.apple.com/macos/distribution/)
-
-## Montar a folha de adesivos
-
-1. Em **Adicionar imagens…**, selecione uma ou várias artes.
-2. Escolha cada imagem para ajustar zoom, posição e quantidade de cópias.
-3. Abra **Folha A4** para conferir a distribuição. No tamanho padrão, cabem quatro adesivos por folha.
-4. Salve o **PDF A4** para imprimir a folha ou o **PNG** para exportar a arte selecionada.
-
-![Prévia A4 do Cartrest com três artes, quatro adesivos chanfrados e régua de 50 mm.](docs/imagens/folha-a4.png)
-
-Imprima o primeiro teste em papel comum, em **Tamanho real (100%)**. A régua do PDF deve medir **50 mm**. Confira o encaixe antes de cortar o vinil. Sobre PLA cinza escuro, vinil branco imprimível ajuda a preservar as cores da arte.
-
-## Girar o cartucho em 3D
-
-O modo **3D** fica ao lado de **Na peça**, **Corte** e **Folha A4**. Arraste a prévia para orbitar o cartucho, role para ajustar o zoom e clique em **Recentralizar** para voltar à vista inicial. A peça usa a malha do STL e mostra a arte selecionada com o recorte do editor.
-
-![Vista tridimensional do Cartrest com a arte selecionada aplicada no rebaixo.](docs/imagens/cartrest-3d.png)
-
-## Imprimir o porta-copos
-
-| Parte | Medida padrão |
-| --- | --- |
-| Porta-copos | 100 × 106,06 × 6 mm |
-| Rebaixo | 82,6 × 87,2 × 0,6 mm |
-| Corte do adesivo | 81,8 × 86,4 mm |
-| Arte com 2 mm de sangria | 85,8 × 90,4 mm |
-
-Importe o STL no fatiador em milímetros e a 100%, com a base plana na mesa. Para a Creality K2 SE com bico de 0,4 mm, o preset de PLA a 0,20 mm é um ponto de partida. O cupom reduz o custo de testar a borda e o encaixe. [Porta-copos STL](modelo/cartrest-ds-100mm.stl) · [Cupom de encaixe STL](modelo/cartrest-cupom-encaixe.stl) · [Guia de fatiamento e referências](modelo/LEIA-ME.md)
-
-## Desenvolver e gerar um release
-
-Com as Command Line Tools do Xcode ou o Xcode instalados, execute na raiz do projeto.
+The app in this release uses ad hoc signing. To verify the download, save the DMG and its `.sha256` file in the same folder and run the following command from that folder.
 
 ```sh
-./macOS/compilar.sh
+shasum -a 256 -c Cartrest-1.1.0-macOS-universal.dmg.sha256
 ```
 
-O build local gera `Cartrest.app`. O empacotador produz o instalador universal com checksum SHA-256 e usa Python 3 com `venv` e `pip` para preparar as dependências de empacotamento.
+## Lay out a sticker sheet
+
+1. Select **Add images…** and choose one or more images.
+2. Select each image to adjust its zoom, position, and copy count. **On the coaster** shows the artwork inside the recess, and **Cut** shows its print boundary.
+3. Open **A4 sheet** to check the layout. At the default size, four labels fit on a page.
+4. Select **Save A4 PDF…** to print the sheet or **Save PNG…** to export the selected artwork.
+
+![Exported A4 sheet with three designs arranged as four labels and a 50 mm reference ruler.](docs/images/a4-sheet.png)
+
+Print a test on plain paper at **Actual Size (100%)**, measure the 50 mm ruler, and check the cut against the recess before printing on vinyl. White printable vinyl helps preserve artwork colors over dark gray PLA.
+
+## Explore the cartridge in 3D
+
+Select **3D** and drag to orbit the cartridge. Scroll to zoom, then choose **Recenter** to restore the starting view. The preview uses the STL mesh, applies the selected artwork to the front recess, and shows the 17 recessed contact channels on the back.
+
+| Front | Back |
+| --- | --- |
+| ![Front of the cartridge in 3D with the selected artwork in its recess.](docs/images/cartridge-3d.png) | ![Back of the cartridge in 3D, showing the recessed contact channels.](docs/images/cartridge-back.png) |
+
+## Print the coaster
+
+| Part | Default dimensions |
+| --- | --- |
+| Coaster | 100 × 106.06 × 6 mm |
+| Recess | 82.6 × 87.2 × 0.6 mm |
+| Cut label | 81.8 × 86.4 mm |
+| Artwork with 2 mm bleed | 85.8 × 90.4 mm |
+
+Import the STL in millimeters at 100% scale, with the label face up. On the Creality K2 SE with a 0.4 mm nozzle, the 0.20 mm PLA preset is a starting point. Print the small fit test to check the recess and label clearance before committing to the full coaster. [Coaster STL](model/cartrest-ds-100mm.stl) · [Fit-test STL](model/cartrest-fit-test.stl) · [Model and slicing guide](model/README.md)
+
+## Build from source
+
+Install Xcode or the Xcode Command Line Tools and run the build from the project root. It produces `Cartrest.app`.
 
 ```sh
-./macOS/empacotar.sh 1.0.0
+./macOS/build.sh
 ```
 
-| Caminho | Conteúdo |
+The release packager builds a universal app and writes a DMG and SHA-256 checksum to `dist/`. It uses Python 3 with `venv` and `pip` to install the pinned packaging dependencies.
+
+```sh
+./macOS/package-release.sh 1.1.0
+```
+
+For distribution signing, set `CARTREST_CODESIGN_IDENTITY` to a Developer ID Application identity. Set `CARTREST_NOTARY_PROFILE` to a stored Keychain profile for `notarytool` to submit and staple the disk image. [Packaging for macOS distribution](https://developer.apple.com/documentation/xcode/packaging-mac-software-for-distribution)
+
+| Path | Contents |
 | --- | --- |
-| `macOS/Cartrest/` | Editor SwiftUI, visualização 3D, geometria e exportação em Core Graphics |
-| `macOS/Recursos/` | Arte de exemplo incluída no aplicativo |
-| `macOS/Release/` | Recursos e configuração do instalador |
-| `modelo/` | STLs e gerador paramétrico com as cotas do adesivo |
-| `docs/imagens/` | Capturas do aplicativo |
-| `dist/` | DMG e checksum gerados no build de distribuição |
+| `macOS/Cartrest/` | SwiftUI editor, 3D preview, geometry, and Core Graphics export |
+| `macOS/Resources/` | Bundled sample artwork |
+| `macOS/Release/` | Disk image background and packaging settings |
+| `model/` | Coaster and fit-test meshes, parametric generator, and shared dimensions |
+| `design/icon/` | Editable icon sources and export notes |
+| `docs/images/` | App screenshots |
 
-Para empacotar com assinatura de distribuição, defina `CARTREST_CODESIGN_IDENTITY` com a identidade Developer ID Application. Defina também `CARTREST_NOTARY_PROFILE` com o perfil do `notarytool` no Chaveiro para notarizar o DMG. [Empacotamento no macOS](https://developer.apple.com/documentation/xcode/packaging-mac-software-for-distribution)
-
-O editor lê o mesmo `modelo/dimensoes.json` que acompanha os STLs, e a prévia A4 usa as mesmas posições do exportador. [Aparência do Cartrest](DESIGN.md) · [Origem do nome](NOMES.md)
+The editor and model share [`dimensions.json`](model/dimensions.json), and the A4 preview uses the same placement calculations as the PDF export. Command-line builds bundle the `.icns` fallback. The editable Liquid Glass icon is available as an Apple Icon Composer project alongside its SVG source. [Icon Composer project](design/icon/Cartrest.icon) · [SVG source](design/icon/Cartrest.svg) · [Icon editing and export](design/icon/README.md) · [Design notes](DESIGN.md) · [Name](NAMES.md)

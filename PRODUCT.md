@@ -8,24 +8,24 @@ macOS
 
 ## Stack
 
-SwiftUI, AppKit, Core Graphics e Image I/O. O aplicativo abre pelo Finder e armazena as artes na sessão local.
+SwiftUI, AppKit, SceneKit, Core Graphics, and Image I/O. Cartrest opens from Finder and keeps imported artwork in the local session.
 
 ## Users
 
-Quem imprime um porta-copos inspirado em um cartucho de Nintendo DS e quer aplicar uma arte própria em vinil.
+Makers printing a Nintendo DS–inspired coaster and applying their own vinyl label.
 
 ## Product Purpose
 
-Preparar artes no tamanho físico do rebaixo do STL incluído e distribuir os adesivos em uma folha em escala real.
+Prepare artwork to fit the included STL recess and arrange labels on a sheet at full scale.
 
 ## Operating Context
 
-Projeto no DevSSD. Impressora 3D Creality K2 SE e PLA cinza escuro. A impressão do vinil acontece em uma impressora de papel compatível com a mídia.
+A typical setup uses a Creality K2 SE with dark gray PLA for the coaster and a compatible paper printer for printable vinyl.
 
 ## Capabilities and Constraints
 
-Importa várias artes, ajusta cada recorte e sua quantidade, e mostra o arranjo no A4 e permite orbitar o porta-copos em 3D com a arte aplicada. Exporta o PDF com corte vetorial e régua de 50 mm e o PNG da arte selecionada com DPI.
+Import several images, adjust each crop and copy count, and preview the A4 layout. Orbit the 3D coaster to inspect the fitted artwork and rear contact channels. Export a PDF with a vector cut line and 50 mm ruler, or export the selected artwork as a PNG with DPI metadata.
 
 ## Brand Commitments
 
-Cartrest, nome inglês de uma palavra. Interface em português com controles nativos e uma prévia sobre tapete de corte em milímetros.
+Cartrest is a single English word. The app uses English copy, native macOS controls, and a cutting mat preview measured in millimeters.
