@@ -70,7 +70,9 @@ plist="$contents/Info.plist"
 /bin/mkdir -p "$contents/MacOS" "$resources"
 /usr/bin/install -m 644 "$macos_dir/Info.plist" "$plist"
 /usr/bin/install -m 644 "$macos_dir/Cartrest.icns" "$resources/Cartrest.icns"
-/usr/bin/install -m 644 "$macos_dir/Resources/sample-artwork.png" "$resources/sample-artwork.png"
+# Bundle the same image users can import from the examples, with its license.
+/usr/bin/install -m 644 "$project_dir/examples/artwork/Anguna - Warriors of Virtue.png" "$resources/"
+/usr/bin/install -m 644 "$project_dir/examples/licenses/Anguna-MIT.txt" "$resources/"
 /usr/bin/install -m 644 "$project_dir/model/dimensions.json" "$resources/dimensions.json"
 /usr/bin/install -m 644 "$project_dir/model/cartrest-ds-100mm.stl" "$resources/cartrest-ds-100mm.stl"
 if [[ -n "$version" ]]; then

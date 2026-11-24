@@ -11,20 +11,20 @@
   · macOS 14 or later · Apple Silicon and Intel
 </p>
 
-![The Cartrest editor with High Tide artwork on a graphite cartridge, a floating measurement display on the left, and editing controls on the right.](docs/images/editor.png)
+![The Cartrest editor with Anguna artwork on a graphite cartridge, a floating measurement display on the board, and editing controls on the right.](docs/images/editor.png)
 
 Cartrest pairs a 3D-printable coaster with a SwiftUI editor for labels that fit its recess. Crop artwork on the coaster, arrange copies on an A4 sheet, and export a **full-scale PDF** with bleed, a vector cut line, and a 50 mm reference ruler.
 
 ## Install on macOS
 
-1. Download `Cartrest-1.1.0-macOS-universal.dmg`. [GitHub Releases](https://github.com/RafaelCasamaximo/cartrest/releases/latest)
+1. Download `Cartrest-1.1.1-macOS-universal.dmg`. [GitHub Releases](https://github.com/RafaelCasamaximo/cartrest/releases/latest)
 2. Open the disk image and drag **Cartrest** to **Applications**.
 3. Eject the disk image and open Cartrest from Finder.
 
 The app in this release uses ad hoc signing. To verify the download, save the DMG and its `.sha256` file in the same folder and run the following command from that folder.
 
 ```sh
-shasum -a 256 -c Cartrest-1.1.0-macOS-universal.dmg.sha256
+shasum -a 256 -c Cartrest-1.1.1-macOS-universal.dmg.sha256
 ```
 
 ## Lay out a sticker sheet
@@ -34,7 +34,9 @@ shasum -a 256 -c Cartrest-1.1.0-macOS-universal.dmg.sha256
 3. Open **A4 sheet** to check the layout. At the default size, four labels fit on a page.
 4. Select **Save A4 PDF…** to print the sheet or **Save PNG…** to export the selected artwork.
 
-![Exported A4 sheet with three designs arranged as four labels and a 50 mm reference ruler.](docs/images/a4-sheet.png)
+The example files use the title artwork from Anguna: Warriors of Virtue and the box art from Diamond Trust of London. The A4 example puts two copies of each on one page. [Artwork and credits](examples/README.md) · [Print-ready PDF](print/cartrest-example-a4.pdf)
+
+![Four labels on one A4 sheet, with two copies each of Anguna and Diamond Trust of London and a 50 mm reference ruler.](docs/images/a4-sheet.png)
 
 Print a test on plain paper at **Actual Size (100%)**, measure the 50 mm ruler, and check the cut against the recess before printing on vinyl. White printable vinyl helps preserve artwork colors over dark gray PLA.
 
@@ -68,7 +70,7 @@ Install Xcode or the Xcode Command Line Tools and run the build from the project
 The release packager builds a universal app and writes a DMG and SHA-256 checksum to `dist/`. It uses Python 3 with `venv` and `pip` to install the pinned packaging dependencies.
 
 ```sh
-./macOS/package-release.sh 1.1.0
+./macOS/package-release.sh
 ```
 
 For distribution signing, set `CARTREST_CODESIGN_IDENTITY` to a Developer ID Application identity. Set `CARTREST_NOTARY_PROFILE` to a stored Keychain profile for `notarytool` to submit and staple the disk image. [Packaging for macOS distribution](https://developer.apple.com/documentation/xcode/packaging-mac-software-for-distribution)
@@ -76,10 +78,11 @@ For distribution signing, set `CARTREST_CODESIGN_IDENTITY` to a Developer ID App
 | Path | Contents |
 | --- | --- |
 | `macOS/Cartrest/` | SwiftUI editor, 3D preview, geometry, and Core Graphics export |
-| `macOS/Resources/` | Bundled sample artwork |
 | `macOS/Release/` | Disk image background and packaging settings |
 | `model/` | Coaster and fit-test meshes, parametric generator, and shared dimensions |
-| `design/icon/` | Editable icon sources and export notes |
+| `design/icon/` | Editable SVG, Icon Composer project, and rendered icon |
+| `examples/` | Importable artwork, sources, and licenses |
+| `print/` | Full-size example A4 sheet |
 | `docs/images/` | App screenshots |
 
-The editor and model share [`dimensions.json`](model/dimensions.json), and the A4 preview uses the same placement calculations as the PDF export. Command-line builds bundle the `.icns` fallback. The editable Liquid Glass icon is available as an Apple Icon Composer project alongside its SVG source. [Icon Composer project](design/icon/Cartrest.icon) · [SVG source](design/icon/Cartrest.svg) · [Icon editing and export](design/icon/README.md) · [Design notes](DESIGN.md) · [Name](NAMES.md)
+The editor and model share `dimensions.json`, and the A4 preview uses the same placement calculations as the PDF export. Command-line builds bundle a static `.icns` made from the Liquid Glass export. [Icon Composer project](design/icon/Cartrest.icon) · [SVG source](design/icon/Cartrest.svg) · [Icon editing and export](design/icon/README.md) · [Design notes](DESIGN.md) · [Name](NAMES.md)

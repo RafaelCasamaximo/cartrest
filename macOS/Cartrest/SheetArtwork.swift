@@ -15,7 +15,9 @@ struct SheetArtwork: Identifiable, Sendable {
     var copies = 1
 
     static func sample() -> SheetArtwork? {
-        guard let url = Bundle.main.url(forResource: "sample-artwork", withExtension: "png") else { return nil }
+        guard let url = Bundle.main.url(forResource: "Anguna - Warriors of Virtue", withExtension: "png") else {
+            return nil
+        }
         return try? load(url, isSample: true)
     }
 
@@ -53,7 +55,7 @@ struct SheetArtwork: Identifiable, Sendable {
         guard let image = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) else {
             throw ArtworkImportError.invalidFile(url.lastPathComponent)
         }
-        return SheetArtwork(name: isSample ? "High Tide" : url.deletingPathExtension().lastPathComponent,
+        return SheetArtwork(name: url.deletingPathExtension().lastPathComponent,
                             image: image, isSample: isSample)
     }
 }
