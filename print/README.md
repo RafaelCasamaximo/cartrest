@@ -1,6 +1,6 @@
 # Print example
 
-The A4 PDF contains four vinyl labels, two each of Anguna: Warriors of Virtue and Diamond Trust of London. It was exported by Cartrest for the 100 mm coaster. Each cut outline measures **81.8 × 86.4 mm** and has **2 mm** of bleed. [Download the print-ready PDF](cartrest-example-a4.pdf) · [Artwork credits and licenses](../examples/README.md)
+Each A4 sheet contains one label for Mario Kart DS, Pokémon Platinum Version, The Legend of Zelda: Phantom Hourglass, and Kirby Super Star Ultra. Cartrest exported both sheets for the 100 mm coaster. Each cut outline measures **81.8 × 86.4 mm** and has **2 mm** of bleed. [Box cover PDF](cartrest-example-a4.pdf) · [Cartridge label PDF](cartrest-cartridge-labels-a4.pdf) · [Artwork sources](../examples/README.md)
 
 1. Print on A4 paper at **Actual Size (100%)**.
 2. Measure the **50 mm** reference ruler on the printed sheet.

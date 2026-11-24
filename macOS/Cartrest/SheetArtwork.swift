@@ -15,7 +15,7 @@ struct SheetArtwork: Identifiable, Sendable {
     var copies = 1
 
     static func sample() -> SheetArtwork? {
-        guard let url = Bundle.main.url(forResource: "Anguna - Warriors of Virtue", withExtension: "png") else {
+        guard let url = Bundle.main.url(forResource: "Mario Kart DS", withExtension: "png") else {
             return nil
         }
         return try? load(url, isSample: true)
