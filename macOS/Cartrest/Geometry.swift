@@ -1,16 +1,17 @@
 import CoreGraphics
 import Foundation
 
-/// The nominal dimensions are generated alongside the STLs. Units are millimeters,
+/// Console profiles supply nominal dimensions in millimeters,
 /// and the face starts at the top left, with X increasing right and Y increasing down.
-struct Geometry: Decodable {
+struct Geometry: Decodable, Sendable {
     let unit: String
     let body: Body
     let recess: Recess
     let label: Label
-    let arrow: Arrow
+    let arrow: Arrow?
+    let grip: Recess?
 
-    struct CornerRadii: Decodable {
+    struct CornerRadii: Decodable, Sendable {
         let topLeft: CGFloat
         let topRight: CGFloat
         let bottomRight: CGFloat
@@ -26,20 +27,35 @@ struct Geometry: Decodable {
         }
     }
 
-    struct Body: Decodable {
+    struct Body: Decodable, Sendable {
         let width: CGFloat
         let height: CGFloat
         let thickness: CGFloat
         let cornerRadii: CornerRadii
+        // Custom outlines cover shapes with a tab or a keyed corner.
+        let vertices: [Vertex]?
 
         func outline(in rect: CGRect) -> CGPath {
             let scale = min(rect.width / width, rect.height / height)
+            if let vertices, !vertices.isEmpty {
+                let path = CGMutablePath()
+                path.addLines(between: vertices.map {
+                    CGPoint(x: rect.minX + $0.x * scale, y: rect.minY + $0.y * scale)
+                })
+                path.closeSubpath()
+                return path
+            }
             return roundedOutline(in: rect, cornerRadii: cornerRadii.scaled(by: scale), chamfer: 0)
         }
     }
 
+    struct Vertex: Decodable, Sendable {
+        let x: CGFloat
+        let y: CGFloat
+    }
+
     /// The label outline already accounts for clearance inside the recess.
-    struct Label: Decodable {
+    struct Label: Decodable, Sendable {
         let x: CGFloat
         let y: CGFloat
         let width: CGFloat
@@ -62,7 +78,7 @@ struct Geometry: Decodable {
         }
     }
 
-    struct Recess: Decodable {
+    struct Recess: Decodable, Sendable {
         let x: CGFloat
         let y: CGFloat
         let width: CGFloat
@@ -71,13 +87,20 @@ struct Geometry: Decodable {
         let chamfer: CGFloat
         let depth: CGFloat
 
+        var bounds: CGRect { CGRect(x: x, y: y, width: width, height: height) }
+
         func outline(in rect: CGRect) -> CGPath {
             let scale = min(rect.width / width, rect.height / height)
             return roundedOutline(in: rect, radius: radius * scale, chamfer: chamfer * scale)
         }
+
+        fileprivate func scaled(by factor: CGFloat) -> Recess {
+            Recess(x: x * factor, y: y * factor, width: width * factor, height: height * factor,
+                   radius: radius * factor, chamfer: chamfer * factor, depth: depth * factor)
+        }
     }
 
-    struct Arrow: Decodable {
+    struct Arrow: Decodable, Sendable {
         let centerX: CGFloat
         let top: CGFloat
         let width: CGFloat
@@ -85,17 +108,7 @@ struct Geometry: Decodable {
         let depth: CGFloat
     }
 
-    static func load(bundle: Bundle = .main) throws -> Geometry {
-        guard let url = bundle.url(forResource: "dimensions", withExtension: "json") else {
-            throw GeometryError.missingResource
-        }
-        let geometry = try JSONDecoder().decode(Geometry.self, from: Data(contentsOf: url))
-        try geometry.validateDimensions()
-        return geometry
-    }
-
-    /// Scales the STL footprint in XY. Thickness and recess depth stay fixed so the
-    /// recess remains suitable for vinyl at every width.
+    /// Scales the same proportions as the STL export, including the recess in Z.
     func scaled(toWidth width: CGFloat) -> Geometry {
         let factor = width / body.width
         guard factor.isFinite, factor > 0, (body.height * factor).isFinite else { return self }
@@ -103,73 +116,75 @@ struct Geometry: Decodable {
             unit: unit,
             body: Body(
                 width: width, height: body.height * factor,
-                thickness: body.thickness, cornerRadii: body.cornerRadii.scaled(by: factor)
+                thickness: body.thickness * factor, cornerRadii: body.cornerRadii.scaled(by: factor),
+                vertices: body.vertices?.map { Vertex(x: $0.x * factor, y: $0.y * factor) }
             ),
-            recess: Recess(
-                x: recess.x * factor, y: recess.y * factor,
-                width: recess.width * factor, height: recess.height * factor,
-                radius: recess.radius * factor, chamfer: recess.chamfer * factor,
-                depth: recess.depth
-            ),
+            recess: recess.scaled(by: factor),
             label: Label(
                 x: label.x * factor, y: label.y * factor,
                 width: label.width * factor, height: label.height * factor,
                 radius: label.radius * factor, chamfer: label.chamfer * factor
             ),
-            arrow: Arrow(
-                centerX: arrow.centerX * factor, top: arrow.top * factor,
-                width: arrow.width * factor, height: arrow.height * factor,
-                depth: arrow.depth
-            )
+            arrow: arrow.map {
+                Arrow(centerX: $0.centerX * factor, top: $0.top * factor,
+                      width: $0.width * factor, height: $0.height * factor, depth: $0.depth * factor)
+            },
+            grip: grip?.scaled(by: factor)
         )
     }
 
-    private func validateDimensions() throws {
-        let lengths = [
-            body.width, body.height, body.thickness,
-            recess.width, recess.height, recess.depth,
-            label.width, label.height,
-            arrow.width, arrow.height, arrow.depth,
-        ]
-        guard unit == "mm", lengths.allSatisfy({ $0.isFinite && $0 > 0 }),
-              recess.depth < body.thickness,
-              arrow.depth < body.thickness else { throw GeometryError.invalidDimensions }
-
-        let positions = [recess.x, recess.y, label.x, label.y, arrow.centerX, arrow.top]
-        guard positions.allSatisfy(\.isFinite) else { throw GeometryError.invalidDimensions }
+    func validateDimensions() throws {
+        guard unit == "mm", (10...500).contains(body.width), (0.01...1_000).contains(body.height),
+              (0.01...100).contains(body.thickness) else {
+            throw ProfileError.invalid("Use millimeters and positive body dimensions within the profile limits.")
+        }
 
         let face = CGRect(x: 0, y: 0, width: body.width, height: body.height)
-        let recessRect = CGRect(x: recess.x, y: recess.y, width: recess.width, height: recess.height)
-        let labelRect = CGRect(x: label.x, y: label.y, width: label.width, height: label.height)
-        let arrowRect = CGRect(x: arrow.centerX - arrow.width / 2, y: arrow.top, width: arrow.width, height: arrow.height)
-        guard face.contains(recessRect), recessRect.contains(labelRect),
-              face.contains(arrowRect) else { throw GeometryError.invalidDimensions }
+        try recess.validate(in: face, thickness: body.thickness, field: "recess")
+        if let grip { try grip.validate(in: face, thickness: body.thickness, field: "grip") }
 
-        // Require each corner to fit its rectangle so the preview follows the actual STL dimensions.
+        let labelRect = CGRect(x: label.x, y: label.y, width: label.width, height: label.height)
+        guard [label.x, label.y, label.width, label.height].allSatisfy(\.isFinite),
+              label.width > 0, label.height > 0, recess.bounds.contains(labelRect),
+              Self.isValidCorner(radius: label.radius, chamfer: label.chamfer,
+                                 shortSide: min(label.width, label.height)) else {
+            throw ProfileError.invalid("The label measurements must fit inside the recess.")
+        }
+        if let arrow {
+            let rect = CGRect(x: arrow.centerX - arrow.width / 2, y: arrow.top, width: arrow.width, height: arrow.height)
+            guard [arrow.centerX, arrow.top, arrow.width, arrow.height, arrow.depth].allSatisfy(\.isFinite),
+                  arrow.width > 0, arrow.height > 0, arrow.depth > 0,
+                  arrow.depth < body.thickness, face.contains(rect) else {
+                throw ProfileError.invalid("The insertion arrow must fit on the front face.")
+            }
+        }
+        if let vertices = body.vertices {
+            guard (3...256).contains(vertices.count), vertices.allSatisfy({
+                (0...body.width).contains($0.x) && (0...body.height).contains($0.y)
+            }) else {
+                throw ProfileError.invalid("Use 3–256 outline vertices within the body dimensions.")
+            }
+        }
+
         let limit = min(body.width, body.height) / 2
-        let radii = [
-            body.cornerRadii.topLeft, body.cornerRadii.topRight,
-            body.cornerRadii.bottomRight, body.cornerRadii.bottomLeft,
-        ]
-        guard radii.allSatisfy({ (0...limit).contains($0) }),
-              isValidCorner(radius: recess.radius, chamfer: recess.chamfer, shortSide: min(recess.width, recess.height)),
-              isValidCorner(radius: label.radius, chamfer: label.chamfer, shortSide: min(label.width, label.height))
-        else { throw GeometryError.invalidDimensions }
+        let radii = [body.cornerRadii.topLeft, body.cornerRadii.topRight,
+                     body.cornerRadii.bottomRight, body.cornerRadii.bottomLeft]
+        guard radii.allSatisfy({ (0...limit).contains($0) }) else {
+            throw ProfileError.invalid("Each body corner radius must be no larger than half the shorter side.")
+        }
     }
 
-    private func isValidCorner(radius: CGFloat, chamfer: CGFloat, shortSide: CGFloat) -> Bool {
+    fileprivate static func isValidCorner(radius: CGFloat, chamfer: CGFloat, shortSide: CGFloat) -> Bool {
         (0...(shortSide / 2)).contains(radius) && (0...(shortSide - radius)).contains(chamfer)
     }
 }
 
-private enum GeometryError: LocalizedError {
-    case missingResource
-    case invalidDimensions
-
-    var errorDescription: String? {
-        switch self {
-        case .missingResource: return "The Cartrest dimensions file is missing."
-        case .invalidDimensions: return "The Cartrest dimensions file contains invalid measurements."
+extension Geometry.Recess {
+    func validate(in rect: CGRect, thickness: CGFloat, field: String) throws {
+        guard [x, y, width, height, depth].allSatisfy(\.isFinite),
+              width > 0, height > 0, depth > 0, depth < thickness, rect.contains(bounds),
+              Geometry.isValidCorner(radius: radius, chamfer: chamfer, shortSide: min(width, height)) else {
+            throw ProfileError.invalid("The \(field) measurements and depth must fit inside the body.")
         }
     }
 }

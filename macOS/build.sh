@@ -70,10 +70,15 @@ plist="$contents/Info.plist"
 /bin/mkdir -p "$contents/MacOS" "$resources"
 /usr/bin/install -m 644 "$macos_dir/Info.plist" "$plist"
 /usr/bin/install -m 644 "$macos_dir/Cartrest.icns" "$resources/Cartrest.icns"
-# Bundle the same label that users can import from the examples.
-/usr/bin/install -m 644 "$project_dir/examples/artwork/Mario Kart DS.png" "$resources/"
-/usr/bin/install -m 644 "$project_dir/model/dimensions.json" "$resources/dimensions.json"
-/usr/bin/install -m 644 "$project_dir/model/cartrest-ds-100mm.stl" "$resources/cartrest-ds-100mm.stl"
+# Discover profiles by filename. The editor builds their meshes from the JSON recipes.
+/bin/mkdir -p "$resources/Consoles" "$resources/SampleArtwork"
+for profile in "$project_dir"/consoles/*.json; do
+  if [[ "$(basename -- "$profile")" != profile.schema.json ]]; then
+    /usr/bin/install -m 644 "$profile" "$resources/Consoles/"
+  fi
+done
+# The optional starter image is also available in the examples.
+/usr/bin/install -m 644 "$project_dir/examples/artwork/Mario Kart DS.png" "$resources/SampleArtwork/"
 if [[ -n "$version" ]]; then
   /usr/bin/plutil -replace CFBundleShortVersionString -string "$version" "$plist"
   /usr/bin/plutil -replace CFBundleVersion -string "$version" "$plist"

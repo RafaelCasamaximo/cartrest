@@ -1,0 +1,146 @@
+{
+  "$schema": "./profile.schema.json",
+  "schemaVersion": 1,
+  "id": "switch",
+  "name": "Nintendo Switch",
+  "order": 30,
+  "widthRange": {
+    "min": 60,
+    "max": 180
+  },
+  "palette": {
+    "mat": {
+      "highlight": "#323B39",
+      "center": "#1D3B31",
+      "shadow": "#0D211A"
+    },
+    "grid": "#C5E0D3",
+    "shell": {
+      "highlight": "#555A60",
+      "shadow": "#32363B"
+    },
+    "plastic": "#383B40",
+    "recess": "#24272B"
+  },
+  "geometry": {
+    "unit": "mm",
+    "body": {
+      "width": 100,
+      "height": 145.3271,
+      "thickness": 6,
+      "cornerRadii": {
+        "topLeft": 10,
+        "topRight": 10,
+        "bottomRight": 8,
+        "bottomLeft": 9
+      }
+    },
+    "recess": {
+      "x": 7.2,
+      "y": 11,
+      "width": 85.6,
+      "height": 114.4,
+      "radius": 4,
+      "chamfer": 0,
+      "depth": 0.6
+    },
+    "label": {
+      "x": 7.6,
+      "y": 11.4,
+      "width": 84.8,
+      "height": 113.6,
+      "radius": 3.6,
+      "chamfer": 0
+    },
+    "grip": {
+      "x": 35,
+      "y": 4.6,
+      "width": 30,
+      "height": 3.4,
+      "radius": 1.2,
+      "chamfer": 0,
+      "depth": 0.45
+    },
+    "arrow": {
+      "centerX": 50,
+      "top": 132,
+      "width": 18,
+      "height": 6.2,
+      "depth": 0.4
+    }
+  },
+  "instructions": [
+    {
+      "op": "extrudeBody"
+    },
+    {
+      "op": "recessLabel"
+    },
+    {
+      "op": "engraveArrow"
+    },
+    {
+      "op": "recessGrip"
+    },
+    {
+      "op": "rearSlot",
+      "x": 13.2,
+      "y": 61.5,
+      "width": 16.6,
+      "radius": 2,
+      "depth": 0.9
+    },
+    {
+      "op": "rearSlot",
+      "x": 34.1,
+      "y": 61.5,
+      "width": 11.3,
+      "radius": 2,
+      "depth": 0.9
+    },
+    {
+      "op": "rearSlot",
+      "x": 49.4,
+      "y": 61.5,
+      "width": 11.3,
+      "radius": 2,
+      "depth": 0.9
+    },
+    {
+      "op": "rearSlot",
+      "x": 64.6,
+      "y": 61.5,
+      "width": 11.3,
+      "radius": 2,
+      "depth": 0.9
+    },
+    {
+      "op": "rearSlot",
+      "x": 79.7,
+      "y": 61.5,
+      "width": 10.5,
+      "radius": 2,
+      "depth": 0.9
+    },
+    {
+      "op": "rearRecess",
+      "radius": 0,
+      "chamfer": 0,
+      "x": 94,
+      "y": 98,
+      "width": 6,
+      "height": 14,
+      "depth": 0.75
+    },
+    {
+      "op": "rearRecess",
+      "radius": 0,
+      "chamfer": 0,
+      "x": 94,
+      "y": 130,
+      "width": 6,
+      "height": 6,
+      "depth": 0.75
+    }
+  ]
+}

@@ -4,7 +4,7 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 // This alias keeps the property wrapper available on SDKs with a State macro.
-private typealias ViewState<Value> = SwiftUI.State<Value>
+typealias ViewState<Value> = SwiftUI.State<Value>
 
 enum PreviewMode: String {
     case coaster, cut, sheet, threeD
@@ -13,7 +13,6 @@ enum PreviewMode: String {
 private enum ExportFormat: Sendable {
     case pdf, png
 
-    var fileExtension: String { self == .pdf ? "pdf" : "png" }
     var contentType: UTType { self == .pdf ? .pdf : .png }
 }
 
@@ -40,7 +39,8 @@ private struct SheetPreparation {
 }
 
 struct CartrestEditor: View {
-    let baseGeometry: Geometry
+    let model: ConsoleModel
+    let isActive: Bool
     @Environment(\.colorScheme) private var colorScheme
     @ViewState private var artworks: [SheetArtwork]
     @ViewState private var selection: UUID?
@@ -48,11 +48,11 @@ struct CartrestEditor: View {
     @ViewState private var page = 0
     @ViewState private var cameraRevision = 0
     @ViewState private var usesCustomRecess = false
-    @ViewState private var showsModelDimensions = false
-    @ViewState private var coasterWidth: CGFloat = 100
-    @ViewState private var customWidth: CGFloat = 81.8
-    @ViewState private var customHeight: CGFloat = 86.4
-    @ViewState private var customRadius: CGFloat = 3.5
+    @ViewState private var showsModelDimensions = true
+    @ViewState private var coasterWidth: CGFloat
+    @ViewState private var customWidth: CGFloat
+    @ViewState private var customHeight: CGFloat
+    @ViewState private var customRadius: CGFloat
     @ViewState private var customChamfer: CGFloat = 0
     @ViewState private var bleed: CGFloat = 2
     @ViewState private var dpi = 300
@@ -60,20 +60,30 @@ struct CartrestEditor: View {
     @ViewState private var status = ""
     @ViewState private var errorMessage: String?
 
+    private var console: ConsoleProfile { model.profile }
+    private var baseGeometry: Geometry { console.geometry }
     private var theme: CartrestTheme { CartrestTheme(colorScheme: colorScheme) }
     private var onlySampleArtwork: Bool { artworks.count == 1 && artworks.first?.isSample == true }
     private var isImporting: Bool { operation == .importing }
+    private var hasValidCoasterWidth: Bool { console.widthRange.contains(coasterWidth) }
 
-    init(geometry: Geometry) {
-        baseGeometry = geometry
-        let sample = SheetArtwork.sample()
+    init(model: ConsoleModel, isActive: Bool = true) {
+        self.model = model
+        self.isActive = isActive
+        let geometry = model.profile.geometry
+        let sample = model.sample
         _artworks = ViewState(initialValue: sample.map { [$0] } ?? [])
         _selection = ViewState(initialValue: sample?.id)
+        _coasterWidth = ViewState(initialValue: geometry.body.width)
+        _customWidth = ViewState(initialValue: geometry.label.width)
+        _customHeight = ViewState(initialValue: geometry.label.height)
+        _customRadius = ViewState(initialValue: geometry.label.radius)
     }
 
     private var validationError: String? {
-        if !usesCustomRecess && !(60...180).contains(coasterWidth) {
-            return "Enter a coaster width between 60 and 180 mm."
+        if !usesCustomRecess && !hasValidCoasterWidth {
+            let range = console.widthRange
+            return "Enter a coaster width between \(decimal(range.min)) and \(decimal(range.max)) mm."
         }
         if usesCustomRecess {
             let shortSide = min(customWidth, customHeight)
@@ -95,7 +105,7 @@ struct CartrestEditor: View {
     }
 
     private var sheetPreparation: SheetPreparation {
-        let geometry = baseGeometry.scaled(toWidth: coasterWidth)
+        let geometry = hasValidCoasterWidth ? baseGeometry.scaled(toWidth: coasterWidth) : baseGeometry
         let label = usesCustomRecess
             ? Geometry.Label(width: customWidth, height: customHeight,
                                 radius: customRadius, chamfer: customChamfer)
@@ -120,6 +130,10 @@ struct CartrestEditor: View {
     }
 
     var body: some View {
+        if isActive { editor }
+    }
+
+    private var editor: some View {
         let preparation = sheetPreparation
         return HSplitView {
             preview(preparation)
@@ -154,7 +168,8 @@ struct CartrestEditor: View {
         return ZStack(alignment: .bottom) {
             PreviewCanvas(
                 mode: previewMode,
-                geometry: preparation.errorMessage == nil ? preparation.geometry : baseGeometry,
+                geometry: preparation.geometry,
+                palette: console.palette,
                 label: preparation.label, artwork: preparation.selectedOptions,
                 artworks: preparation.artworks, placements: pages.indices.contains(visiblePage) ? pages[visiblePage] : [],
                 page: visiblePage + 1, pageCount: pages.count,
@@ -164,7 +179,8 @@ struct CartrestEditor: View {
 
             if previewMode == .threeD {
                 Cartridge3D(
-                    geometry: preparation.errorMessage == nil ? preparation.geometry : baseGeometry,
+                    model: model,
+                    geometry: preparation.geometry,
                     artwork: preparation.selectedOptions
                 )
                 // Recenter recreates the camera while this preview is open.
@@ -213,7 +229,7 @@ struct CartrestEditor: View {
                         framingControls(selected, preparation: preparation)
                     }
                     inspectorDivider
-                    printSettings(errorMessage: preparation.errorMessage)
+                    printSettings(preparation)
                 }
                 .padding(17)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -330,12 +346,10 @@ struct CartrestEditor: View {
             Button("Add images…", systemImage: "plus") { addImages() }
                 .keyboardShortcut("o", modifiers: .command)
                 .disabled(operation != nil || (totalCopies >= ArtworkExporter.maxCopies && !onlySampleArtwork))
-            if artworks.isEmpty {
+            if artworks.isEmpty, let sample = model.sample {
                 Button("Use sample artwork") {
-                    if let sample = SheetArtwork.sample() {
-                        artworks = [sample]
-                        selection = sample.id
-                    }
+                    artworks = [sample]
+                    selection = sample.id
                 }
                 .disabled(isImporting)
             }
@@ -397,7 +411,7 @@ struct CartrestEditor: View {
         .help(isEnabled ? "Pan the artwork" : "Zoom in to pan along this axis")
     }
 
-    private func printSettings(errorMessage: String?) -> some View {
+    private func printSettings(_ preparation: SheetPreparation) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("Printing").font(.headline).accessibilityAddTraits(.isHeader)
             Picker("Resolution", selection: $dpi) {
@@ -419,13 +433,22 @@ struct CartrestEditor: View {
                         numberField("Lower-left chamfer (mm)", value: $customChamfer)
                     } else {
                         numberField("Coaster width (mm)", value: $coasterWidth)
-                        Text("In your slicer, set X and Y to \(decimal(coasterWidth / baseGeometry.body.width * 100))% and leave Z at 100%.")
-                            .font(.caption).foregroundStyle(.secondary)
+                        if hasValidCoasterWidth {
+                            let body = preparation.geometry.body
+                            Text("\(decimal(body.width)) × \(decimal(body.height)) × \(decimal(body.thickness)) mm")
+                                .font(.caption.monospacedDigit())
+                                .foregroundStyle(.secondary)
+                                .accessibilityLabel("Coaster width, height, and thickness in millimeters")
+                                .accessibilityValue("\(decimal(body.width)) by \(decimal(body.height)) by \(decimal(body.thickness))")
+                        }
+                        Button("Save STL…", systemImage: "cube") { saveModel() }
+                            .disabled(operation != nil || !hasValidCoasterWidth)
+                            .help("Save the coaster with the dimensions shown above")
                     }
                 }
                 .padding(.top, 8)
             }
-            if let errorMessage {
+            if let errorMessage = preparation.errorMessage {
                 Text(errorMessage).font(.caption).foregroundStyle(.red)
             }
         }
@@ -571,29 +594,48 @@ struct CartrestEditor: View {
         guard operation == nil, preparation.canSave(format),
               let selected = preparation.editingArtwork,
               let options = preparation.selectedOptions else { return }
+        let filename = format == .pdf
+            ? "\(console.exportPrefix)-a4-sheet.pdf"
+            : "\(console.exportPrefix)-\(selected.name.replacingOccurrences(of: "/", with: "-")).png"
+
+        // Capture the crop and artwork list before the save panel opens.
+        let batch = preparation.artworks
+        beginExport(filename, as: format.contentType) { destination in
+            switch format {
+            case .pdf:
+                try ArtworkExporter.pdf(batch, to: destination)
+            case .png:
+                try ArtworkExporter.png(options).write(to: destination, options: .atomic)
+            }
+        }
+    }
+
+    private func saveModel() {
+        guard !usesCustomRecess, hasValidCoasterWidth else { return }
+        let scale = coasterWidth / baseGeometry.body.width
+        let mesh = model.mesh
+        let filename = "\(console.modelFilePrefix)-\(decimal(coasterWidth))mm.stl"
+        beginExport(filename, as: UTType(filenameExtension: "stl") ?? .data) { destination in
+            try mesh.write(scaledBy: scale, to: destination)
+        }
+    }
+
+    private func beginExport(_ filename: String, as contentType: UTType,
+                             write: @escaping @Sendable (URL) throws -> Void) {
+        guard operation == nil else { return }
         let panel = NSSavePanel()
         panel.prompt = "Save"
-        panel.allowedContentTypes = [format.contentType]
-        panel.nameFieldStringValue = format == .pdf
-            ? "cartrest-a4-sheet.pdf"
-            : "cartrest-\(selected.name.replacingOccurrences(of: "/", with: "-")).png"
+        panel.allowedContentTypes = [contentType]
+        panel.nameFieldStringValue = filename
         guard panel.runModal() == .OK, let destination = panel.url else { return }
 
-        // Export uses the crop and artwork list from the moment of the click.
-        // Each format writes the completed file atomically while editing can continue.
-        let batch = preparation.artworks
         operation = .exporting
-        status = "Exporting \(format.fileExtension.uppercased())…"
+        status = "Exporting \(destination.pathExtension.uppercased())…"
         Task {
             defer { operation = nil }
             do {
                 try await Task.detached(priority: .userInitiated) {
-                    switch format {
-                    case .pdf:
-                        try ArtworkExporter.pdf(batch, to: destination)
-                    case .png:
-                        try ArtworkExporter.png(options).write(to: destination, options: .atomic)
-                    }
+                    try write(destination)
                 }.value
                 let success = "Saved as \(destination.lastPathComponent)"
                 status = success

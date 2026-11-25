@@ -4,6 +4,7 @@
 import argparse
 import json
 import math
+import re
 import struct
 from collections import defaultdict
 from pathlib import Path
@@ -11,58 +12,25 @@ from tempfile import TemporaryDirectory
 
 
 ROOT = Path(__file__).resolve().parent
-BASE_WIDTH = 100
-MIN_WIDTH = 60
-MAX_WIDTH = 180
+PROFILES = ROOT.parent / "consoles"
 DIMENSION_DECIMALS = 4
 CORNER_NAMES = ("topLeft", "topRight", "bottomRight", "bottomLeft")
 
-# Face dimensions in millimeters, with X increasing rightward and Y downward.
-# Both the meshes and the editor's JSON resource use this set of dimensions.
-DIMENSIONS = {
-    "unit": "mm",
-    "body": {
-        "width": BASE_WIDTH,
-        "height": 106.06,
-        "thickness": 6,
-        "cornerRadii": dict(zip(CORNER_NAMES, (3, 3, 2, 9))),
-    },
-    "recess": {
-        "x": 8.7, "y": 6.2, "width": 82.6, "height": 87.2,
-        # The chamfer has the same 0.4 mm perpendicular clearance as the straight edges.
-        # Accounting for the setback on both axes gives 7.5 + 0.4 × (2 − √2) = 7.7343 mm.
-        "radius": 3.9, "chamfer": 7.7343, "depth": 0.6,
-    },
-    "label": {
-        "x": 9.1, "y": 6.6, "width": 81.8, "height": 86.4,
-        "radius": 3.5, "chamfer": 7.5,
-    },
-    "arrow": {"centerX": 50, "top": 97.6, "width": 10, "height": 4, "depth": 0.4},
-    # Raised ribs separate the rear contact channels. Their mouths meet the
-    # insertion edge, while the rest of the rear face stays on the build plate.
-    "contactChannels": {
-        "x": 16.5, "y": 93.56, "count": 17, "width": 3, "pitch": 4,
-        "length": 12.5, "depth": 0.9,
-    },
-}
 
-
-def scaled_dimensions(width):
-    """Scale the face in XY while keeping the thickness and recess depths in Z."""
-    factor = width / BASE_WIDTH
-
-    def scale_value(name, value):
-        if name in ("unit", "thickness", "depth", "count"):
+def scaled_dimensions(nominal, factor):
+    """Scale the measured geometry, preserving discrete fields and metadata."""
+    def scale(value, name=None):
+        if isinstance(value, dict):
+            return {key: scale(item, key) for key, item in value.items()}
+        if isinstance(value, list):
+            return [scale(item, name) for item in value]
+        if name in ("unit", "count") or (factor == 1 and name in ("depth", "thickness")):
             return value
+        if factor == 1:
+            return float(value)
         return round(value * factor, DIMENSION_DECIMALS)
 
-    def scale_xy(values):
-        return {
-            name: scale_xy(value) if isinstance(value, dict) else scale_value(name, value)
-            for name, value in values.items()
-        }
-
-    return scale_xy(DIMENSIONS)
+    return scale(nominal)
 
 
 def width_suffix(width):
@@ -83,16 +51,32 @@ def footprint(x, y, width, height, radii, lower_left_chamfer=0):
             points.extend(((x + lower_left_chamfer, y + height), (x, y + height - lower_left_chamfer)))
             continue
         radius = radii[(index + 1) % 4]
+        if not radius:
+            points.append((corner_x, corner_y))
+            continue
         center_x = corner_x + (-radius if index < 2 else radius)
         center_y = corner_y + (radius if index in (0, 3) else -radius)
         for step in range(13):
             angle = math.radians(-90 + 90 * index + step * 7.5)
             points.append((center_x + radius * math.cos(angle), center_y + radius * math.sin(angle)))
-    return [(round(px, 7), round(py, 7)) for px, py in points]
+    snapped = []
+    for px, py in points:
+        point = (round(px, 7), round(py, 7))
+        if not snapped or snapped[-1] != point:
+            snapped.append(point)
+    return snapped[:-1] if snapped and snapped[0] == snapped[-1] else snapped
+
+
+def body_outline(body):
+    vertices = body.get("vertices")
+    if vertices is not None:
+        return [(round(vertex["x"], 7), round(vertex["y"], 7)) for vertex in vertices]
+    radii = tuple(body["cornerRadii"][name] for name in CORNER_NAMES)
+    return footprint(0, 0, body["width"], body["height"], radii)
 
 
 def x_bounds(outline, y):
-    """Find both horizontal endpoints of a scanline through the convex outline."""
+    """Find both endpoints of a horizontal slice through a single span."""
     hits = []
     for (ax, ay), (bx, by) in zip(outline, outline[1:] + outline[:1]):
         if not min(ay, by) <= y <= max(ay, by):
@@ -126,6 +110,8 @@ def planar_cells(outer, flat_z, recesses, seams):
     rows, row_marks = seams
     for top, bottom in zip(rows, rows[1:]):
         outer_top, outer_bottom = x_bounds(outer, top), x_bounds(outer, bottom)
+        if outer_top is None or outer_bottom is None:
+            raise ValueError("A cut extends beyond the cartridge outline.")
         middle = (top + bottom) / 2
         active = []
         for outline, z in recesses:
@@ -138,12 +124,18 @@ def planar_cells(outer, flat_z, recesses, seams):
         left_top, left_bottom = outer_top[0], outer_bottom[0]
         for _, outline, z in active:
             inside_top, inside_bottom = x_bounds(outline, top), x_bounds(outline, bottom)
+            if not (left_top <= inside_top[0] <= inside_top[1] <= outer_top[1]
+                    and left_bottom <= inside_bottom[0] <= inside_bottom[1] <= outer_bottom[1]):
+                raise ValueError("Cuts on the same face must stay inside the outline and avoid overlap.")
             regions.append(((left_top, inside_top[0]), (left_bottom, inside_bottom[0]), flat_z))
             regions.append((inside_top, inside_bottom, z))
             left_top, left_bottom = inside_top[1], inside_bottom[1]
         regions.append(((left_top, outer_top[1]), (left_bottom, outer_bottom[1]), flat_z))
 
         for (top_left, top_right), (bottom_left, bottom_right), z in regions:
+            # A side relief can occupy the whole span up to the outer edge.
+            if top_left == top_right and bottom_left == bottom_right:
+                continue
             top_edge = [(x, top) for x in row_marks[top] if top_left <= x <= top_right]
             bottom_edge = [(x, bottom) for x in reversed(row_marks[bottom]) if bottom_left <= x <= bottom_right]
             yield list(reversed(top_edge + bottom_edge)), z
@@ -292,39 +284,159 @@ def write_stl(path, triangles):
 
 def recess_outline(recess):
     return footprint(recess["x"], recess["y"], recess["width"], recess["height"],
-                     (recess["radius"],) * 4, recess["chamfer"])
+                     (recess.get("radius", 0),) * 4, recess.get("chamfer", 0))
 
 
 def contact_recesses(body, channels):
     """Open each channel all the way to the insertion edge in face coordinates."""
     top, edge = channels["y"], body["height"]
     for index in range(channels["count"]):
-        left = round(channels["x"] + index * channels["pitch"], DIMENSION_DECIMALS)
-        right = round(left + channels["width"], DIMENSION_DECIMALS)
+        left = round(channels["x"] + index * channels["pitch"], 7)
+        right = round(channels["x"] + index * channels["pitch"] + channels["width"], 7)
         yield [(left, top), (right, top), (right, edge), (left, edge)], channels["depth"]
 
 
-def generate(output, width):
-    width = round(width, DIMENSION_DECIMALS)
-    dimensions = scaled_dimensions(width)
-    body, recess, arrow = (dimensions[name] for name in ("body", "recess", "arrow"))
-    radii = tuple(body["cornerRadii"][name] for name in CORNER_NAMES)
-    outer = footprint(0, 0, body["width"], body["height"], radii)
-    center, top = arrow["centerX"], arrow["top"]
-    half_width = arrow["width"] / 2
-    triangle = [(center - half_width, top), (center + half_width, top), (center, top + arrow["height"])]
-    recesses = [(recess_outline(recess), recess["depth"]), (triangle, arrow["depth"])]
-    contacts = list(contact_recesses(body, dimensions["contactChannels"]))
-    coaster = build_mesh(outer, body["thickness"], recesses, contacts)
+def contact_slot(body, slot):
+    """Open the square end onto the insertion edge, leaving a rounded upper end."""
+    return footprint(slot["x"], slot["y"], slot["width"], body["height"] - slot["y"],
+                     (slot["radius"], slot["radius"], 0, 0)), slot["depth"]
 
-    # The fit test reproduces the recess profile, depth, and chamfer on a smaller piece.
-    factor = width / BASE_WIDTH
-    fit_test_outer = footprint(0, 0, 36 * factor, 28 * factor, (2 * factor,) * 4)
-    fit_test_recess = {**recess, "x": 5 * factor, "y": 4 * factor,
-                     "width": 26 * factor, "height": 20 * factor}
+
+def load_profile(path):
+    def invalid_constant(value):
+        raise ValueError(f"{value} is not a JSON number.")
+
+    with path.open("rb") as file:
+        data = file.read(256 * 1024 + 1)
+    if len(data) > 256 * 1024:
+        raise ValueError("Use a JSON profile smaller than 256 KiB.")
+    profile = json.loads(data, parse_constant=invalid_constant)
+    if type(profile["schemaVersion"]) is not int or profile["schemaVersion"] != 1:
+        raise ValueError("Use schemaVersion 1.")
+    if not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", profile["id"]) or len(profile["id"]) > 64:
+        raise ValueError("Use 1–64 lowercase letters, digits, or single hyphens for the ID.")
+    width = profile["geometry"]["body"]["width"]
+    limit = profile["widthRange"]
+    if not 10 <= limit["min"] <= width <= limit["max"] <= 500:
+        raise ValueError("The width range must be within 10–500 mm and include the nominal width.")
+    if profile["geometry"]["unit"] != "mm":
+        raise ValueError("Use millimeters for the profile geometry.")
+    return profile
+
+
+def interpret_recipe(profile):
+    """Build front and rear cuts and derive the dimensions report from the recipe."""
+    dimensions = dict(profile["geometry"])
+    body = dimensions["body"]
+    instructions = profile["instructions"]
+    if not 2 <= len(instructions) <= 67 or instructions[0]["op"] != "extrudeBody":
+        raise ValueError("Start with extrudeBody and use 2–67 instructions.")
+    face = (body["width"], body["height"])
+    thickness = body["thickness"]
+    if not (0.01 <= face[1] <= 1000 and 0.01 <= thickness <= 100):
+        raise ValueError("Use positive body dimensions within the profile limits.")
+
+    front, rear = [], []
+    channel_rows, slots, reliefs = [], [], []
+    counts = {"recessLabel": 0, "engraveArrow": 0, "recessGrip": 0}
+    for instruction in instructions[1:]:
+        op = instruction["op"]
+        settings = {key: value for key, value in instruction.items() if key != "op"}
+        if op in counts:
+            counts[op] += 1
+
+        if op == "recessLabel":
+            recess = dimensions["recess"]
+            front.append((recess_outline(recess), recess["depth"]))
+        elif op == "engraveArrow":
+            arrow = dimensions["arrow"]
+            center, top = arrow["centerX"], arrow["top"]
+            half_width = arrow["width"] / 2
+            triangle = [(center - half_width, top), (center + half_width, top), (center, top + arrow["height"])]
+            front.append(([(round(x, 7), round(y, 7)) for x, y in triangle], arrow["depth"]))
+        elif op == "recessGrip":
+            grip = dimensions["grip"]
+            front.append((recess_outline(grip), grip["depth"]))
+        elif op == "rearChannels":
+            count = settings["count"]
+            if type(count) is not int or not 1 <= count <= 64 or count + len(rear) > 64:
+                raise ValueError("Use at most 64 individual rear cuts.")
+            if not (0 < settings["width"] < settings["pitch"] and 0 <= settings["y"] < face[1]):
+                raise ValueError("Rear channels must be separated and open at the insertion edge.")
+            rear.extend(contact_recesses(body, settings))
+            channel_rows.append({**settings, "length": round(face[1] - settings["y"], DIMENSION_DECIMALS)})
+        elif op == "rearSlot":
+            if not (0 < settings["width"] and 0 <= settings["y"] < face[1]
+                    and 0 <= settings["radius"] <= min(settings["width"] / 2, face[1] - settings["y"])):
+                raise ValueError("The rear slot must fit between its upper end and the insertion edge.")
+            rear.append(contact_slot(body, settings))
+            slots.append(settings)
+        elif op == "rearRecess":
+            rear.append((recess_outline(settings), settings["depth"]))
+            reliefs.append(settings)
+        else:
+            raise ValueError(f"Unknown instruction {op!r} after extrudeBody.")
+
+    expected = {"recessLabel": 1, "engraveArrow": int("arrow" in dimensions), "recessGrip": int("grip" in dimensions)}
+    if counts != expected:
+        raise ValueError("Use recessLabel and a matching instruction for each optional front feature.")
+    if len(rear) > 64:
+        raise ValueError("Use at most 64 individual rear cuts.")
+    for outline, depth in [*front, *rear]:
+        if len(set(outline)) < 3 or not (0 < depth < thickness):
+            raise ValueError("Each cut needs a distinct outline and a positive depth inside the body.")
+    if max(depth for _, depth in front) + max((depth for _, depth in rear), default=0) >= thickness:
+        raise ValueError("Leave solid material between the deepest front and rear cuts.")
+
+    label = recess_outline(dimensions["label"])
+    recess = recess_outline(dimensions["recess"])
+    for y in {y for _, y in [*label, *recess]}:
+        cut, boundary = x_bounds(label, y), x_bounds(recess, y)
+        if cut and (not boundary or not boundary[0] <= cut[0] <= cut[1] <= boundary[1]):
+            raise ValueError("The label outline must fit inside the recess, including its corners.")
+
+    if len(channel_rows) == 1:
+        row = channel_rows[0]
+        dimensions["contactChannels"] = {field: row[field] for field in
+                                          ("x", "y", "count", "width", "pitch", "length", "depth")}
+    elif channel_rows:
+        dimensions["contactChannelRows"] = channel_rows
+    if slots:
+        dimensions["contactSlots"] = slots
+    if reliefs:
+        dimensions["rearReliefs"] = reliefs
+    return dimensions, front, rear
+
+
+def generate(output, width, profile):
+    nominal, front, rear = interpret_recipe(profile)
+    body, recess = nominal["body"], nominal["recess"]
+    outer = body_outline(body)
+    if len(set(outer)) != len(outer) or len(outer) < 3:
+        raise ValueError("The body outline must use distinct vertices.")
+    if any(min(p[i] for p in outer) != 0 or max(p[i] for p in outer) != round(body[axis], 7)
+           for i, axis in enumerate(("width", "height"))):
+        raise ValueError("The body outline must reach the four declared bounds.")
+    coaster = build_mesh(outer, body["thickness"], front, rear)
+
+    # The coupon preserves the recess depth and corners, even for a larger custom chamfer.
+    min_side = max(2 * recess["radius"], recess["chamfer"] + recess["radius"])
+    cut_width = min(recess["width"], max(26, min_side))
+    cut_height = min(recess["height"], max(20, min_side))
+    fit_test_outer = footprint(0, 0, cut_width + 10, cut_height + 8, (2,) * 4)
+    fit_test_recess = {**recess, "x": 5, "y": 4, "width": cut_width, "height": cut_height}
     fit_test = build_mesh(fit_test_outer, body["thickness"], [(recess_outline(fit_test_recess), recess["depth"])])
-    stls = ((f"cartrest-ds-{width_suffix(width)}mm.stl", coaster),
-            ("cartrest-fit-test.stl", fit_test))
+
+    factor = width / body["width"]
+    dimensions = scaled_dimensions(nominal, factor)
+
+    def scale_mesh(mesh):
+        if factor == 1:
+            return mesh
+        return [tuple(tuple(axis * factor for axis in vertex) for vertex in triangle) for triangle in mesh]
+
+    stls = ((f"cartrest-{profile['id']}-{width_suffix(width)}mm.stl", scale_mesh(coaster)),
+            ("cartrest-fit-test.stl", scale_mesh(fit_test)))
 
     # Validate both solids and prepare the JSON before replacing any output.
     # Staging on the same volume allows each file to be replaced atomically.
@@ -343,18 +455,35 @@ def generate(output, width):
 
 
 def main():
+    profiles = {path.stem: path for path in sorted(PROFILES.glob("*.json")) if path.name != "profile.schema.json"}
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--width", type=float, default=BASE_WIDTH,
-                        help=f"final width in mm, between {MIN_WIDTH} and {MAX_WIDTH}")
+    source = parser.add_mutually_exclusive_group()
+    source.add_argument("--console", choices=profiles, default="ds", help="bundled profile ID (default: ds)")
+    source.add_argument("--profile", type=Path, help="path to a community profile JSON")
+    parser.add_argument("--width", type=float, help="final width in millimeters (defaults to the profile's nominal width)")
     parser.add_argument("--output", type=Path, help="directory for the STL meshes and cutting dimensions")
     options = parser.parse_args()
-    if not MIN_WIDTH <= options.width <= MAX_WIDTH:
-        parser.error(f"width must be between {MIN_WIDTH} and {MAX_WIDTH} mm")
-    default_output = ROOT if options.width == BASE_WIDTH else ROOT / f"{width_suffix(options.width)}mm"
-    output = options.output or default_output
-    if options.width != BASE_WIDTH and output.resolve() == ROOT:
-        parser.error(f"choose a different directory to preserve the default {BASE_WIDTH} mm dimensions")
-    generate(output, options.width)
+    defaults = {name: ROOT if name == "ds" else ROOT / name for name in profiles}
+
+    try:
+        profile = load_profile(options.profile or profiles[options.console])
+        nominal_width = profile["geometry"]["body"]["width"]
+        width = nominal_width if options.width is None else round(options.width, DIMENSION_DECIMALS)
+        limits = profile["widthRange"]
+        if not limits["min"] <= width <= limits["max"]:
+            raise ValueError(f"Width must be between {limits['min']} and {limits['max']} mm.")
+        if options.profile and not options.output:
+            raise ValueError("Choose an --output directory for a community profile.")
+
+        default_directory = defaults[options.console]
+        output = options.output or (default_directory if width == nominal_width
+                                    else default_directory / f"{width_suffix(width)}mm")
+        destination = output.resolve()
+        if destination in defaults.values() and (options.profile or destination != default_directory or width != nominal_width):
+            raise ValueError("Choose a separate directory to preserve the default model files.")
+        generate(destination, width, profile)
+    except (KeyError, ValueError, TypeError, OSError, OverflowError) as error:
+        parser.error(str(error))
 
 
 if __name__ == "__main__":

@@ -1,0 +1,569 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Cartrest console profile v1",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "id",
+    "name",
+    "order",
+    "widthRange",
+    "palette",
+    "geometry",
+    "instructions"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "schemaVersion": {
+      "const": 1
+    },
+    "id": {
+      "$ref": "#/$defs/id"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "^[^\\r\\n\\t]+$"
+    },
+    "order": {
+      "type": "integer"
+    },
+    "widthRange": {
+      "$ref": "#/$defs/widthRange"
+    },
+    "palette": {
+      "$ref": "#/$defs/palette"
+    },
+    "artworkFilePrefix": {
+      "$ref": "#/$defs/id"
+    },
+    "sampleArtwork": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[^./\\\\][^/\\\\]*$"
+    },
+    "geometry": {
+      "$ref": "#/$defs/geometry"
+    },
+    "instructions": {
+      "$ref": "#/$defs/instructions"
+    }
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "color": {
+      "type": "string",
+      "pattern": "^#[0-9A-Fa-f]{6}$"
+    },
+    "widthRange": {
+      "type": "object",
+      "required": [
+        "min",
+        "max"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "min": {
+          "type": "number",
+          "minimum": 10,
+          "maximum": 500
+        },
+        "max": {
+          "type": "number",
+          "minimum": 10,
+          "maximum": 500
+        }
+      }
+    },
+    "palette": {
+      "type": "object",
+      "required": [
+        "mat",
+        "grid",
+        "shell",
+        "plastic",
+        "recess"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "mat": {
+          "type": "object",
+          "required": [
+            "highlight",
+            "center",
+            "shadow"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "highlight": {
+              "$ref": "#/$defs/color"
+            },
+            "center": {
+              "$ref": "#/$defs/color"
+            },
+            "shadow": {
+              "$ref": "#/$defs/color"
+            }
+          }
+        },
+        "grid": {
+          "$ref": "#/$defs/color"
+        },
+        "shell": {
+          "type": "object",
+          "required": [
+            "highlight",
+            "shadow"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "highlight": {
+              "$ref": "#/$defs/color"
+            },
+            "shadow": {
+              "$ref": "#/$defs/color"
+            }
+          }
+        },
+        "plastic": {
+          "$ref": "#/$defs/color"
+        },
+        "recess": {
+          "$ref": "#/$defs/color"
+        }
+      }
+    },
+    "body": {
+      "type": "object",
+      "required": [
+        "width",
+        "height",
+        "thickness",
+        "cornerRadii"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "width": {
+          "type": "number",
+          "minimum": 10,
+          "maximum": 500
+        },
+        "height": {
+          "type": "number",
+          "minimum": 0.01,
+          "maximum": 1000
+        },
+        "thickness": {
+          "type": "number",
+          "minimum": 0.01,
+          "maximum": 100
+        },
+        "cornerRadii": {
+          "type": "object",
+          "required": [
+            "topLeft",
+            "topRight",
+            "bottomRight",
+            "bottomLeft"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "topLeft": {
+              "type": "number",
+              "minimum": 0
+            },
+            "topRight": {
+              "type": "number",
+              "minimum": 0
+            },
+            "bottomRight": {
+              "type": "number",
+              "minimum": 0
+            },
+            "bottomLeft": {
+              "type": "number",
+              "minimum": 0
+            }
+          }
+        },
+        "vertices": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 256,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "required": [
+              "x",
+              "y"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "x": {
+                "type": "number",
+                "minimum": 0
+              },
+              "y": {
+                "type": "number",
+                "minimum": 0
+              }
+            }
+          }
+        }
+      }
+    },
+    "recess": {
+      "type": "object",
+      "required": [
+        "x",
+        "y",
+        "width",
+        "height",
+        "radius",
+        "chamfer",
+        "depth"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "x": {
+          "type": "number",
+          "minimum": 0
+        },
+        "y": {
+          "type": "number",
+          "minimum": 0
+        },
+        "width": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "height": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "radius": {
+          "type": "number",
+          "minimum": 0
+        },
+        "chamfer": {
+          "type": "number",
+          "minimum": 0
+        },
+        "depth": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "label": {
+      "type": "object",
+      "required": [
+        "x",
+        "y",
+        "width",
+        "height",
+        "radius",
+        "chamfer"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "x": {
+          "type": "number",
+          "minimum": 0
+        },
+        "y": {
+          "type": "number",
+          "minimum": 0
+        },
+        "width": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "height": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "radius": {
+          "type": "number",
+          "minimum": 0
+        },
+        "chamfer": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "arrow": {
+      "type": "object",
+      "required": [
+        "centerX",
+        "top",
+        "width",
+        "height",
+        "depth"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "centerX": {
+          "type": "number",
+          "minimum": 0
+        },
+        "top": {
+          "type": "number",
+          "minimum": 0
+        },
+        "width": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "height": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "depth": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "geometry": {
+      "type": "object",
+      "required": [
+        "unit",
+        "body",
+        "recess",
+        "label"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "unit": {
+          "const": "mm"
+        },
+        "body": {
+          "$ref": "#/$defs/body"
+        },
+        "recess": {
+          "$ref": "#/$defs/recess"
+        },
+        "label": {
+          "$ref": "#/$defs/label"
+        },
+        "arrow": {
+          "$ref": "#/$defs/arrow"
+        },
+        "grip": {
+          "$ref": "#/$defs/recess"
+        }
+      }
+    },
+    "instructions": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 67,
+      "prefixItems": [
+        {
+          "type": "object",
+          "required": [
+            "op"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "extrudeBody"
+            }
+          }
+        }
+      ],
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "op"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "op": {
+                "const": "recessLabel"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "op"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "op": {
+                "const": "engraveArrow"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "op"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "op": {
+                "const": "recessGrip"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "op",
+              "x",
+              "y",
+              "count",
+              "width",
+              "pitch",
+              "depth"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "op": {
+                "const": "rearChannels"
+              },
+              "x": {
+                "type": "number",
+                "minimum": 0
+              },
+              "y": {
+                "type": "number",
+                "minimum": 0
+              },
+              "count": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 64
+              },
+              "width": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "pitch": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "depth": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "op",
+              "x",
+              "y",
+              "width",
+              "radius",
+              "depth"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "op": {
+                "const": "rearSlot"
+              },
+              "x": {
+                "type": "number",
+                "minimum": 0
+              },
+              "y": {
+                "type": "number",
+                "minimum": 0
+              },
+              "width": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "radius": {
+                "type": "number",
+                "minimum": 0
+              },
+              "depth": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "op",
+              "x",
+              "y",
+              "width",
+              "height",
+              "radius",
+              "chamfer",
+              "depth"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "op": {
+                "const": "rearRecess"
+              },
+              "x": {
+                "type": "number",
+                "minimum": 0
+              },
+              "y": {
+                "type": "number",
+                "minimum": 0
+              },
+              "width": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "height": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "radius": {
+                "type": "number",
+                "minimum": 0
+              },
+              "chamfer": {
+                "type": "number",
+                "minimum": 0
+              },
+              "depth": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              }
+            }
+          }
+        ]
+      },
+      "contains": {
+        "type": "object",
+        "required": [
+          "op"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "op": {
+            "const": "recessLabel"
+          }
+        }
+      },
+      "minContains": 1,
+      "maxContains": 1
+    }
+  }
+}

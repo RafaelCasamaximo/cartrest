@@ -14,10 +14,9 @@ struct SheetArtwork: Identifiable, Sendable {
     var y: CGFloat = 0
     var copies = 1
 
-    static func sample() -> SheetArtwork? {
-        guard let url = Bundle.main.url(forResource: "Mario Kart DS", withExtension: "png") else {
-            return nil
-        }
+    static func sample(named filename: String, in bundle: Bundle) -> SheetArtwork? {
+        guard let resources = bundle.resourceURL else { return nil }
+        let url = resources.appending(path: "SampleArtwork", directoryHint: .isDirectory).appending(path: filename)
         return try? load(url, isSample: true)
     }
 

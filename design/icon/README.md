@@ -1,6 +1,6 @@
 # Cartrest icon
 
-A mint-green cartridge sits on a pine-green background. The lifted corner shows the vinyl label.
+A silver cartridge sits on a graphite background. The lifted corner shows the vinyl label. The neutral palette serves all four consoles.
 
 | File | Use |
 | --- | --- |

@@ -5,6 +5,7 @@ import SwiftUI
 struct PreviewCanvas: View {
     let mode: PreviewMode
     let geometry: Geometry
+    let palette: CartridgePalette
     let label: Geometry.Label
     let artwork: ArtworkOptions?
     let artworks: [ArtworkOptions]
@@ -13,14 +14,14 @@ struct PreviewCanvas: View {
     let pageCount: Int
     let bottomInset: CGFloat
 
-    private let matColor = Color(red: 0.075, green: 0.20, blue: 0.16)
-    private let gridColor = Color(red: 0.68, green: 0.82, blue: 0.74)
+    private var matColor: Color { Color(cartrestHex: palette.mat.center) }
+    private var gridColor: Color { Color(cartrestHex: palette.grid) }
 
     var body: some View {
         Canvas { context, size in
-            let matHighlight = Color(red: 0.105, green: 0.24, blue: 0.19)
             context.fill(Path(CGRect(origin: .zero, size: size)), with: .linearGradient(
-                Gradient(colors: [matHighlight, matColor, Color(red: 0.049, green: 0.15, blue: 0.13)]),
+                Gradient(colors: [Color(cartrestHex: palette.mat.highlight), matColor,
+                                  Color(cartrestHex: palette.mat.shadow)]),
                 startPoint: .zero, endPoint: CGPoint(x: size.width, y: size.height)
             ))
             // Reserve room for the measurement display below the coaster or sheet.
@@ -102,19 +103,22 @@ struct PreviewCanvas: View {
         let coasterShape = Path(body.outline(in: rect))
         var shadow = ctx
         shadow.addFilter(.shadow(color: .black.opacity(0.52), radius: 12, x: 0, y: 9))
-        shadow.fill(coasterShape, with: .color(Color(red: 0.11, green: 0.13, blue: 0.14)))
+        shadow.fill(coasterShape, with: .color(Color(cartrestHex: palette.shell.shadow)))
         ctx.fill(coasterShape, with: .linearGradient(
-            Gradient(colors: [Color(red: 0.32, green: 0.36, blue: 0.37),
-                              Color(red: 0.13, green: 0.17, blue: 0.19)]),
+            Gradient(colors: [Color(cartrestHex: palette.shell.highlight), Color(cartrestHex: palette.shell.shadow)]),
             startPoint: rect.origin, endPoint: CGPoint(x: rect.maxX, y: rect.maxY)
         ))
         ctx.stroke(coasterShape, with: .color(.white.opacity(0.26)), lineWidth: 1)
         let recess = geometry.recess
-        let recessRect = transform(CGRect(x: recess.x, y: recess.y, width: recess.width, height: recess.height),
-                               relativeTo: rect, scale: scale)
+        let recessRect = transform(recess.bounds, relativeTo: rect, scale: scale)
         let recessShape = Path(recess.outline(in: recessRect))
-        ctx.fill(recessShape, with: .color(.black.opacity(0.63)))
+        ctx.fill(recessShape, with: .color(Color(cartrestHex: palette.recess)))
         ctx.stroke(recessShape, with: .color(.white.opacity(0.25)), lineWidth: 0.6)
+        if let grip = geometry.grip {
+            let gripShape = Path(grip.outline(in: transform(grip.bounds, relativeTo: rect, scale: scale)))
+            ctx.fill(gripShape, with: .color(Color(cartrestHex: palette.recess)))
+            ctx.stroke(gripShape, with: .color(.white.opacity(0.20)), lineWidth: 0.6)
+        }
         // The image includes bleed. On the coaster, the mask shows the final
         // sticker outline inside the recess.
         if let artwork {
@@ -125,7 +129,7 @@ struct PreviewCanvas: View {
             drawArtwork(artwork, in: artworkRect, clippedToCut: true, ctx: ctx)
         }
 
-        let arrow = geometry.arrow
+        guard let arrow = geometry.arrow else { return }
         var triangle = Path()
         triangle.move(to: CGPoint(x: rect.minX + (arrow.centerX - arrow.width / 2) * scale,
                                   y: rect.minY + arrow.top * scale))

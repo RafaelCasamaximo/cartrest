@@ -1,0 +1,85 @@
+{
+  "$schema": "./profile.schema.json",
+  "schemaVersion": 1,
+  "id": "ds",
+  "name": "Nintendo DS",
+  "order": 10,
+  "widthRange": {
+    "min": 60,
+    "max": 180
+  },
+  "palette": {
+    "mat": {
+      "highlight": "#4C5752",
+      "center": "#1E4738",
+      "shadow": "#102D24"
+    },
+    "grid": "#D4EBE0",
+    "shell": {
+      "highlight": "#565B60",
+      "shadow": "#282C30"
+    },
+    "plastic": "#3B3E41",
+    "recess": "#272A2D"
+  },
+  "artworkFilePrefix": "cartrest",
+  "sampleArtwork": "Mario Kart DS.png",
+  "geometry": {
+    "unit": "mm",
+    "body": {
+      "width": 100,
+      "height": 106.06,
+      "thickness": 6,
+      "cornerRadii": {
+        "topLeft": 3,
+        "topRight": 3,
+        "bottomRight": 2,
+        "bottomLeft": 9
+      }
+    },
+    "recess": {
+      "x": 8.7,
+      "y": 6.2,
+      "width": 82.6,
+      "height": 87.2,
+      "radius": 3.9,
+      "chamfer": 7.7343,
+      "depth": 0.6
+    },
+    "label": {
+      "x": 9.1,
+      "y": 6.6,
+      "width": 81.8,
+      "height": 86.4,
+      "radius": 3.5,
+      "chamfer": 7.5
+    },
+    "arrow": {
+      "centerX": 50,
+      "top": 97.6,
+      "width": 10,
+      "height": 4,
+      "depth": 0.4
+    }
+  },
+  "instructions": [
+    {
+      "op": "extrudeBody"
+    },
+    {
+      "op": "recessLabel"
+    },
+    {
+      "op": "engraveArrow"
+    },
+    {
+      "op": "rearChannels",
+      "x": 16.5,
+      "y": 93.56,
+      "count": 17,
+      "width": 3,
+      "pitch": 4,
+      "depth": 0.9
+    }
+  ]
+}

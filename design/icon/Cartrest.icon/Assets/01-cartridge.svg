@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
   <title>Cartridge body</title>
-  <path transform="rotate(-13 512 512)" fill="#92D1B0"
+  <path transform="rotate(-13 512 512)" fill="#BFC3C9"
         d="M324 234H700Q743 234 743 277V737Q743 788 692 788H377Q281 788 281 692V277Q281 234 324 234Z"/>
 </svg>

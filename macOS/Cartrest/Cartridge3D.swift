@@ -3,12 +3,13 @@ import CoreGraphics
 import SceneKit
 import SwiftUI
 
-/// Interactive preview of the same solid included with the app.
+/// Interactive preview of the same solid used for STL export.
 struct Cartridge3D: NSViewRepresentable {
+    let model: ConsoleModel
     let geometry: Geometry
     let artwork: ArtworkOptions?
 
-    func makeCoordinator() -> CartridgeScene { CartridgeScene() }
+    func makeCoordinator() -> CartridgeScene { CartridgeScene(model: model) }
 
     func makeNSView(context: Context) -> CartridgeView3D {
         let view = CartridgeView3D(frame: .zero)
@@ -60,11 +61,12 @@ final class CartridgeScene {
     private let label = SCNNode()
     private let plane = SCNPlane()
     private let labelMaterial = SCNMaterial()
-    private let originalSize: CGSize?
+    private let nominalWidth: CGFloat
+    private let meshIsAvailable: Bool
     private var currentSize: CGSize?
     private var currentTexture: TextureKey?
 
-    init(bundle: Bundle = .main) {
+    init(model: ConsoleModel) {
         scene.background.contents = NSColor.clear
         camera.camera = SCNCamera()
         camera.camera?.fieldOfView = 36
@@ -72,18 +74,16 @@ final class CartridgeScene {
         camera.camera?.zFar = 2_000
         scene.rootNode.addChildNode(camera)
 
-        guard let url = bundle.url(forResource: "cartrest-ds-100mm", withExtension: "stl"),
-              let data = try? Data(contentsOf: url),
-              let mesh = STLMesh(data: data)
-        else {
-            originalSize = nil
+        nominalWidth = model.profile.geometry.body.width
+        guard let mesh = STLMesh(file: model.mesh) else {
+            meshIsAvailable = false
             return
         }
 
-        originalSize = mesh.size
+        meshIsAvailable = true
         let plastic = SCNMaterial()
         plastic.lightingModel = .blinn
-        plastic.diffuse.contents = NSColor(srgbRed: 0.24, green: 0.29, blue: 0.30, alpha: 1)
+        plastic.diffuse.contents = NSColor(Color(cartrestHex: model.profile.palette.plastic))
         plastic.specular.contents = NSColor(white: 0.19, alpha: 1)
         plastic.shininess = 0.24
         mesh.geometry.firstMaterial = plastic
@@ -104,7 +104,7 @@ final class CartridgeScene {
     }
 
     func configure(in view: CartridgeView3D) {
-        guard originalSize != nil else {
+        guard meshIsAvailable else {
             let notice = NSTextField(wrappingLabelWithString: "The cartridge model is unavailable for the 3D preview.")
             notice.textColor = .white
             notice.alignment = .center
@@ -133,12 +133,13 @@ final class CartridgeScene {
     }
 
     func update(geometry: Geometry, artwork: ArtworkOptions?) {
-        guard let originalSize else { return }
+        guard meshIsAvailable else { return }
         let size = CGSize(width: geometry.body.width, height: geometry.body.height)
         let longSide = max(size.width, size.height)
         if currentSize != size {
-            // Scale the STL in XY and keep Z fixed to preserve its thickness and recesses.
-            body.scale = SCNVector3(size.width / originalSize.width, size.height / originalSize.height, 1)
+            // The preview applies the same proportional size as the exported STL.
+            let factor = size.width / nominalWidth
+            body.scale = SCNVector3(factor, factor, factor)
             body.position = SCNVector3(-size.width / 2, -size.height / 2, -geometry.body.thickness / 2)
 
             if let previousSize = currentSize {
@@ -247,51 +248,28 @@ private func labelTexture(_ artwork: ArtworkOptions) -> CGImage? {
 @MainActor
 private struct STLMesh {
     let geometry: SCNGeometry
-    let size: CGSize
 
-    init?(data: Data) {
-        let facetDataStart = 84
-        let bytesPerFacet = 50
-        guard data.count >= facetDataStart else { return nil }
-
-        let facetCount = data.withUnsafeBytes { Int(UInt32(littleEndian: $0.loadUnaligned(fromByteOffset: 80, as: UInt32.self))) }
-        guard facetCount > 0, facetCount == (data.count - facetDataStart) / bytesPerFacet,
-              data.count == facetDataStart + facetCount * bytesPerFacet else { return nil }
-
+    init?(file: CartridgeSTL) {
         // Each binary STL facet stores one normal and three vertices. Keep the vertices separate
         // so the face, chamfer and recess walls retain their sharp edges.
         var vertices = [SCNVector3]()
         var normals = [SCNVector3]()
-        vertices.reserveCapacity(facetCount * 3)
-        normals.reserveCapacity(facetCount * 3)
-        let complete = data.withUnsafeBytes { buffer -> Bool in
-            func vector(at offset: Int) -> SCNVector3? {
-                let coordinates = (0..<3).map { axis in
-                    let bits = buffer.loadUnaligned(fromByteOffset: offset + axis * 4, as: UInt32.self)
-                    return Float(bitPattern: UInt32(littleEndian: bits))
-                }
-                guard coordinates.allSatisfy(\.isFinite) else { return nil }
-                return SCNVector3(CGFloat(coordinates[0]), CGFloat(coordinates[1]), CGFloat(coordinates[2]))
-            }
+        vertices.reserveCapacity(file.facetCount * 3)
+        normals.reserveCapacity(file.facetCount * 3)
 
-            for facet in 0..<facetCount {
-                let start = facetDataStart + facet * bytesPerFacet
-                guard let normal = vector(at: start) else { return false }
-                for index in 1...3 {
-                    guard let vertex = vector(at: start + index * 12) else { return false }
-                    vertices.append(vertex)
-                    normals.append(normal)
-                }
-            }
-            return true
+        func sceneVector(_ vector: SIMD3<Float>) -> SCNVector3 {
+            SCNVector3(CGFloat(vector.x), CGFloat(vector.y), CGFloat(vector.z))
         }
-        guard complete else { return nil }
+        file.forEachFacet { normal, a, b, c in
+            vertices.append(contentsOf: [sceneVector(a), sceneVector(b), sceneVector(c)])
+            let direction = sceneVector(normal)
+            normals.append(contentsOf: [direction, direction, direction])
+        }
         let vertexSource = SCNGeometrySource(vertices: vertices)
         let normalSource = SCNGeometrySource(normals: normals)
         let triangles = SCNGeometryElement(indices: vertices.indices.map(UInt32.init), primitiveType: .triangles)
         geometry = SCNGeometry(sources: [vertexSource, normalSource], elements: [triangles])
         let (minimum, maximum) = geometry.boundingBox
-        size = CGSize(width: maximum.x - minimum.x, height: maximum.y - minimum.y)
-        guard size.width > 0, size.height > 0 else { return nil }
+        guard maximum.x > minimum.x, maximum.y > minimum.y, maximum.z > minimum.z else { return nil }
     }
 }

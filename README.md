@@ -4,35 +4,36 @@
 
 <h1 align="center">Cartrest</h1>
 
-<p align="center">A Nintendo DS–inspired coaster and a native macOS editor for print-ready vinyl labels.</p>
+<p align="center">3D-printable cartridge coasters and a native macOS editor for vinyl labels.</p>
 
 <p align="center">
   <strong><a href="https://github.com/RafaelCasamaximo/cartrest/releases/latest">Download for macOS</a></strong>
   · macOS 14 or later · Apple Silicon and Intel
 </p>
 
-![The Cartrest editor with original Mario Kart DS cover artwork on a graphite cartridge, a floating measurement display on the board, and editing controls on the right.](docs/images/editor.png)
+![The Cartrest editor with console tabs, Mario Kart DS cover artwork on a graphite cartridge, a floating measurement display, and editing controls on the right.](docs/images/editor.png)
 
-Cartrest pairs a 3D-printable coaster with a SwiftUI editor for labels that fit its recess. Crop artwork on the coaster, arrange copies on an A4 sheet, and export a **full-scale PDF** with bleed, a vector cut line, and a 50 mm reference ruler.
+Cartrest pairs four 3D-printable cartridge models with a SwiftUI editor for labels that fit their recesses. Choose **Nintendo DS**, **Nintendo 3DS**, **Nintendo Switch**, or **Nintendo Switch 2** to preview the matching model, arrange copies on an A4 sheet, and export a **full-scale PDF** with bleed, a vector cut line, and a 50 mm reference ruler.
 
 ## Install on macOS
 
-1. Download `Cartrest-1.1.2-macOS-universal.dmg`. [GitHub Releases](https://github.com/RafaelCasamaximo/cartrest/releases/latest)
+1. Download `Cartrest-1.2.0-macOS-universal.dmg`. [GitHub Releases](https://github.com/RafaelCasamaximo/cartrest/releases/latest)
 2. Open the disk image and drag **Cartrest** to **Applications**.
 3. Eject the disk image and open Cartrest from Finder.
 
 The app in this release uses ad hoc signing. To verify the download, save the DMG and its `.sha256` file in the same folder and run the following command from that folder.
 
 ```sh
-shasum -a 256 -c Cartrest-1.1.2-macOS-universal.dmg.sha256
+shasum -a 256 -c Cartrest-1.2.0-macOS-universal.dmg.sha256
 ```
 
 ## Lay out a sticker sheet
 
-1. Select **Add images…** and choose one or more images.
-2. Select each image to adjust its zoom, position, and copy count. **On the coaster** shows the artwork inside the recess, and **Cut** shows its print boundary.
-3. Open **A4 sheet** to check the layout. At the default size, four labels fit on a page.
-4. Select **Save A4 PDF…** to print the sheet or **Save PNG…** to export the selected artwork.
+1. Choose a console in the toolbar. Each tab keeps its own artwork, framing, copy counts, and print settings for the session.
+2. Select **Add images…** and choose one or more images.
+3. Select each image to adjust its zoom, position, and copy count. **On the coaster** shows the artwork inside the recess, and **Cut** shows its print boundary.
+4. Open **A4 sheet** to check the layout and page count. The larger Switch labels fit two per A4 sheet at the default size and bleed.
+5. Select **Save A4 PDF…** to print the sheet or **Save PNG…** to export the selected artwork.
 
 The examples use the North American retail artwork for Mario Kart DS, Pokémon Platinum Version, The Legend of Zelda: Phantom Hourglass, and Kirby Super Star Ultra. Each A4 sheet fits one of every game. [Source scans and importable artwork](examples/README.md) · [Box cover PDF](print/cartrest-example-a4.pdf) · [Cartridge label PDF](print/cartrest-cartridge-labels-a4.pdf)
 
@@ -44,7 +45,7 @@ Print a test on plain paper at **Actual Size (100%)**, measure the 50 mm ruler, 
 
 ## Explore the cartridge in 3D
 
-Select **3D** and drag to orbit the cartridge. Scroll to zoom, then choose **Recenter** to restore the starting view. The preview uses the STL mesh, applies the selected artwork to the front recess, and shows the 17 recessed contact channels on the back. Both front previews use the original cartridge labels.
+Select **3D** and drag to orbit the cartridge. Scroll to zoom, then choose **Recenter** to restore the starting view. Each tab previews the same solid it exports for printing, with the matching shell color and the selected artwork inside the recess. The DS examples below use the original cartridge labels.
 
 | Pokémon Platinum Version | Kirby Super Star Ultra |
 | --- | --- |
@@ -56,14 +57,20 @@ Select **3D** and drag to orbit the cartridge. Scroll to zoom, then choose **Rec
 
 ## Print the coaster
 
-| Part | Default dimensions |
-| --- | --- |
-| Coaster | 100 × 106.06 × 6 mm |
-| Recess | 82.6 × 87.2 × 0.6 mm |
-| Cut label | 81.8 × 86.4 mm |
-| Artwork with 2 mm bleed | 85.8 × 90.4 mm |
+| Console | Coaster | Cut label | Files |
+| --- | --- | --- | --- |
+| Nintendo DS | 100 × 106.06 × 6 mm | 81.8 × 86.4 mm | [STL](model/cartrest-ds-100mm.stl) · [Fit test](model/cartrest-fit-test.stl) |
+| Nintendo 3DS | 100 × 100.29 × 6 mm | 77.35 × 81.70 mm | [STL](model/3ds/cartrest-3ds-100mm.stl) · [Fit test](model/3ds/cartrest-fit-test.stl) |
+| Nintendo Switch | 100 × 145.33 × 6 mm | 84.8 × 113.6 mm | [STL](model/switch/cartrest-switch-100mm.stl) · [Fit test](model/switch/cartrest-fit-test.stl) |
+| Nintendo Switch 2 | 100 × 145.33 × 6 mm | 84.8 × 113.6 mm | [STL](model/switch2/cartrest-switch2-100mm.stl) · [Fit test](model/switch2/cartrest-fit-test.stl) |
 
-Import the STL in millimeters at 100% scale, with the label face up. On the Creality K2 SE with a 0.4 mm nozzle, the 0.20 mm PLA preset is a starting point. Print the small fit test to check the recess and label clearance before committing to the full coaster. [Coaster STL](model/cartrest-ds-100mm.stl) · [Fit-test STL](model/cartrest-fit-test.stl) · [Model and slicing guide](model/README.md)
+For a custom size, set **Coaster width (mm)** under **Model dimensions**, then select **Save STL…**. Height, thickness, and the label cut scale with the width. Export the labels from the same tab so they fit the saved model.
+
+Import the STL in millimeters at 100% scale, with the label face up. On the Creality K2 SE with a 0.4 mm nozzle, the 0.20 mm PLA preset is a starting point. Print the small fit test to check the recess and label clearance before committing to the full coaster. [Model and slicing guide](model/README.md)
+
+## Add a console
+
+Choose **File → Import Console Profile…** or click the toolbar **+** to install a JSON profile. Cartrest adds a tab with its own colors, dimensions, sticker outline, and recipe for the 3D model. Profiles can define new cartridges or variations of existing ones. [Profile authoring and contribution guide](consoles/README.md) · [JSON Schema](consoles/profile.schema.json)
 
 ## Build from source
 
@@ -85,13 +92,14 @@ For distribution signing, set `CARTREST_CODESIGN_IDENTITY` to a Developer ID App
 | --- | --- |
 | `macOS/Cartrest/` | SwiftUI editor, 3D preview, geometry, and Core Graphics export |
 | `macOS/Release/` | Disk image background and packaging settings |
-| `model/` | Coaster and fit-test meshes, parametric generator, and shared dimensions |
+| `consoles/` | Console profiles, construction recipes, and a contributor guide |
+| `model/` | Downloadable meshes, fit tests, and the command-line generator |
 | `design/icon/` | Editable SVG, Icon Composer project, and rendered icon |
 | `examples/` | Original retail scans, importable artwork, and source links |
 | `print/` | Full-size A4 sheets for box covers and cartridge labels |
 | `docs/images/` | App screenshots |
 
-The editor and model share `dimensions.json`, and the A4 preview uses the same placement calculations as the PDF export. Command-line builds bundle a static `.icns` made from the Liquid Glass export. [Icon Composer project](design/icon/Cartrest.icon) · [SVG source](design/icon/Cartrest.svg) · [Icon editing and export](design/icon/README.md) · [Design notes](DESIGN.md)
+The A4 preview uses the same placement calculations as the PDF export. The app and the command-line model generator read the same console profiles. Command-line builds bundle a static `.icns` made from the Liquid Glass export. [Icon Composer project](design/icon/Cartrest.icon) · [SVG source](design/icon/Cartrest.svg) · [Icon editing and export](design/icon/README.md) · [Design notes](DESIGN.md)
 
 ## Acknowledgments
 
