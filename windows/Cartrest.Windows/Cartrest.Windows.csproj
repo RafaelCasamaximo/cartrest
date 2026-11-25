@@ -9,18 +9,28 @@
     <ApplicationIcon>../installer/Cartrest.ico</ApplicationIcon>
     <UseRidGraph>false</UseRidGraph>
   </PropertyGroup>
+  <ItemDefinitionGroup>
+    <Content>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+    </Content>
+  </ItemDefinitionGroup>
   <ItemGroup>
     <ProjectReference Include="../Cartrest.Core/Cartrest.Core.csproj" />
     <Resource Include="../installer/Cartrest.ico" Link="Resources/Cartrest.ico" />
 
-    <Content Include="../../consoles/*.json" Link="Resources/Consoles/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
-    <Content Include="../../design/labels/catalog.json" Link="Resources/Labels/catalog.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
-    <Content Include="../../design/labels/assets/*.png" Link="Resources/Labels/assets/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
-    <Content Include="../../design/labels/fonts/*" Link="Resources/Labels/fonts/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
-    <Content Include="../../examples/cartridge-labels/*.png;../../examples/3ds/*.png;../../examples/switch/*.png;../../examples/switch2/*.png" Link="Resources/Samples/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
-    <Content Include="../../examples/reconstructions/kirby-super-star-ultra/background.png" Link="Resources/Kirby/background.png" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
-    <Content Include="../../LICENSE" Link="LICENSE" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
-    <Content Include="../../design/labels/README.md" Link="Resources/Labels/ASSETS.md" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
-    <Content Include="../../examples/README.md" Link="Resources/Samples/SOURCES.md" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="../../consoles/*.json" Link="Resources/Consoles/%(Filename)%(Extension)" />
+    <Content Include="../../design/labels/catalog.json" Link="Resources/Labels/catalog.json" />
+    <Content Include="../../design/labels/assets/*.png" Link="Resources/Labels/assets/%(Filename)%(Extension)" />
+    <Content Include="../../design/labels/fonts/*" Link="Resources/Labels/fonts/%(Filename)%(Extension)" />
+    <Content Include="../../examples/cartridge-labels/*.png" Link="Resources/Samples/ds/%(Filename)%(Extension)" />
+    <Content Include="../../examples/3ds/*.png" Link="Resources/Samples/3ds/%(Filename)%(Extension)" />
+    <Content Include="../../examples/switch/*.png" Link="Resources/Samples/switch/%(Filename)%(Extension)" />
+    <Content Include="../../examples/switch2/*.png" Link="Resources/Samples/switch2/%(Filename)%(Extension)" />
+    <Content Include="../../examples/reconstructions/kirby-super-star-ultra/background.png" Link="Resources/Kirby/background.png" />
+    <Content Include="../../LICENSE" Link="LICENSE" />
+    <Content Include="../../design/labels/README.md" Link="Resources/Labels/ASSETS.md" />
+    <Content Include="../../examples/README.md" Link="Resources/Samples/SOURCES.md" />
   </ItemGroup>
 </Project>

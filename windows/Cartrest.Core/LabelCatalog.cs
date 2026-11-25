@@ -88,7 +88,7 @@ public sealed class LabelDraft : IDisposable
         HeaderScale = 1;
         FooterColor = SKColor.Parse(template.FooterColor);
         CodeColor = SKColor.Parse(template.CodeColor);
-        CodeAlignment = Enum.TryParse<CodeAlignment>(template.CodeAlignment, true, out var alignment) ? alignment : CodeAlignment.Right;
+        CodeAlignment = Enum.TryParse<CodeAlignment>(template.CodeAlignment, true, out var alignment) ? alignment : CodeAlignment.Center;
         CodeScale = 1;
     }
 

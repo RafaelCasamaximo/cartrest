@@ -27,9 +27,9 @@ internal sealed class OrbitView : Grid
         AutomationProperties.SetHelpText(this, "Drag or use arrow keys to rotate. Scroll or use plus and minus to zoom. Home resets the view.");
         cartridge.Transform = new RotateTransform3D(rotation);
         var lights = new Model3DGroup();
-        lights.Children.Add(new AmbientLight(Color.FromRgb(123, 130, 127)));
+        lights.Children.Add(new AmbientLight(Color.FromRgb(153, 157, 154)));
         lights.Children.Add(new DirectionalLight(Color.FromRgb(240, 240, 228), new(-0.55, -0.7, -1)));
-        lights.Children.Add(new DirectionalLight(Color.FromRgb(129, 156, 163), new(0.45, 0.2, 1)));
+        lights.Children.Add(new DirectionalLight(Color.FromRgb(162, 181, 181), new(0.45, 0.2, 1)));
         var view = new Viewport3D { Camera = camera, IsHitTestVisible = false, ClipToBounds = true };
         view.Children.Add(new ModelVisual3D { Content = lights });
         view.Children.Add(new ModelVisual3D { Content = cartridge });

@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Markup;
 using System.Windows.Media;
 using SkiaSharp;
 
@@ -87,6 +88,83 @@ internal static class Ui
         return template;
     }
 
+    // Define native Track parts in markup so WPF wires drag, paging and keyboard commands.
+    private static readonly Lazy<ResourceDictionary> TrackStyles = new(() => (ResourceDictionary)XamlReader.Parse("""
+        <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+          <Style x:Key="TrackButton" TargetType="RepeatButton">
+            <Setter Property="Focusable" Value="False" />
+            <Setter Property="ClickMode" Value="Press" />
+            <Setter Property="Template">
+              <Setter.Value>
+                <ControlTemplate TargetType="RepeatButton">
+                  <Border Background="Transparent" />
+                </ControlTemplate>
+              </Setter.Value>
+            </Setter>
+          </Style>
+          <ControlTemplate x:Key="SliderTrack" TargetType="Slider">
+            <Grid Background="Transparent">
+              <Border x:Name="Line" Height="4" VerticalAlignment="Center" Background="#35473D" CornerRadius="2" />
+              <Track x:Name="PART_Track">
+                <Track.DecreaseRepeatButton>
+                  <RepeatButton Style="{StaticResource TrackButton}" Command="{x:Static Slider.DecreaseLarge}" />
+                </Track.DecreaseRepeatButton>
+                <Track.Thumb>
+                  <Thumb Width="13" Height="13" VerticalAlignment="Center">
+                    <Thumb.Template>
+                      <ControlTemplate TargetType="Thumb">
+                        <Border Background="#B4E3BA" BorderBrush="#183025" BorderThickness="1" CornerRadius="7" />
+                      </ControlTemplate>
+                    </Thumb.Template>
+                  </Thumb>
+                </Track.Thumb>
+                <Track.IncreaseRepeatButton>
+                  <RepeatButton Style="{StaticResource TrackButton}" Command="{x:Static Slider.IncreaseLarge}" />
+                </Track.IncreaseRepeatButton>
+              </Track>
+            </Grid>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsKeyboardFocused" Value="True">
+                <Setter TargetName="Line" Property="Background" Value="#B8CEC0" />
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+          <Style x:Key="VerticalScroller" TargetType="ScrollBar">
+            <Setter Property="Width" Value="11" />
+            <Setter Property="Template">
+              <Setter.Value>
+                <ControlTemplate TargetType="ScrollBar">
+                  <Border Padding="2,0" Background="#17211D">
+                    <Track x:Name="PART_Track" Orientation="Vertical" IsDirectionReversed="True">
+                      <Track.DecreaseRepeatButton>
+                        <RepeatButton Style="{StaticResource TrackButton}" Command="{x:Static ScrollBar.PageUpCommand}" />
+                      </Track.DecreaseRepeatButton>
+                      <Track.Thumb>
+                        <Thumb>
+                          <Thumb.Template>
+                            <ControlTemplate TargetType="Thumb">
+                              <Border Background="#688277" CornerRadius="4" />
+                            </ControlTemplate>
+                          </Thumb.Template>
+                        </Thumb>
+                      </Track.Thumb>
+                      <Track.IncreaseRepeatButton>
+                        <RepeatButton Style="{StaticResource TrackButton}" Command="{x:Static ScrollBar.PageDownCommand}" />
+                      </Track.IncreaseRepeatButton>
+                    </Track>
+                  </Border>
+                </ControlTemplate>
+              </Setter.Value>
+            </Setter>
+          </Style>
+        </ResourceDictionary>
+        """));
+
+    private static ControlTemplate SliderTemplate() => (ControlTemplate)TrackStyles.Value["SliderTrack"];
+
+    internal static Style ScrollbarStyle() => (Style)TrackStyles.Value["VerticalScroller"];
+
     internal static StackPanel Row(params UIElement[] children)
     {
         var row = new StackPanel { Orientation = Orientation.Horizontal };
@@ -169,7 +247,8 @@ internal static class Ui
                 SmallChange = whole ? 1 : (max - min) / 100,
                 LargeChange = Math.Max(1, (max - min) / 10),
                 IsSnapToTickEnabled = whole, TickFrequency = 1,
-                Foreground = Accent, Margin = new Thickness(0, 1, 0, 4)
+                Foreground = Accent, Margin = new Thickness(0, 1, 0, 4),
+                Height = 19, Template = SliderTemplate()
             };
             AutomationProperties.SetName(track, name);
             track.ValueChanged += (_, _) =>

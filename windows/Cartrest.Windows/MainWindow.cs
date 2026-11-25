@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -25,6 +26,7 @@ internal sealed partial class MainWindow : Window
     private readonly ProofBoard mat = new();
     private readonly OrbitView orbit = new() { Visibility = Visibility.Collapsed };
     private readonly StackPanel tools = new();
+    private readonly StackPanel exportBar = new() { Margin = new Thickness(0, 9, 0, 3) };
     private readonly ScrollViewer scroll;
     private readonly StackPanel viewSelector = new() { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Center };
     private readonly WrapPanel modes = new() { HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 0, 0, 9) };
@@ -69,7 +71,7 @@ internal sealed partial class MainWindow : Window
             Run(UpdateProof);
         };
 
-        var host = new Grid();
+        var host = new Grid { Background = Ui.Window };
         host.RowDefinitions.Add(new() { Height = GridLength.Auto });
         host.RowDefinitions.Add(new() { Height = new GridLength(1, GridUnitType.Star) });
         host.RowDefinitions.Add(new() { Height = GridLength.Auto });
@@ -91,13 +93,16 @@ internal sealed partial class MainWindow : Window
         topTools.Children.Add(modes);
         DockPanel.SetDock(topTools, Dock.Top);
         inspector.Children.Add(topTools);
+        DockPanel.SetDock(exportBar, Dock.Bottom);
+        inspector.Children.Add(exportBar);
         scroll = new ScrollViewer
         {
             Content = tools,
             VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
             HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
-            Padding = new Thickness(0, 0, 2, 0)
+            Padding = new Thickness(0, 0, 3, 0)
         };
+        scroll.Resources[typeof(ScrollBar)] = Ui.ScrollbarStyle();
         inspector.Children.Add(scroll);
         var inspectorFrame = new Border
         {
@@ -287,7 +292,7 @@ internal sealed partial class MainWindow : Window
         {
             foreach (var (mode, title) in new[]
             {
-                (ProofMode.Coaster, "On coaster"), (ProofMode.Cut, "Cut"), (ProofMode.Sheet, "A4 sheet"), (ProofMode.ThreeD, "3D")
+                (ProofMode.Coaster, "On the coaster"), (ProofMode.Cut, "Cut"), (ProofMode.Sheet, "A4 sheet"), (ProofMode.ThreeD, "3D")
             })
             {
                 var button = Ui.Button(title, () => SetMode(mode), active: current.Mode == mode);
@@ -322,6 +327,7 @@ internal sealed partial class MainWindow : Window
     {
         double offset = scroll.VerticalOffset;
         tools.Children.Clear();
+        exportBar.Children.Clear();
         pngActions.Clear();
         pdfAction = sheetAction = null;
         if (designer)

@@ -16,11 +16,11 @@ internal sealed partial class MainWindow
     private void BuildDesignerInspector()
     {
         var draft = current.Draft;
-        var output = Ui.Section(tools, "Label output");
+        var output = Ui.Section(tools, "Label");
         sheetAction = Ui.Button("Add to Sheet", AddDesignedLabel, prominent: true);
         var png = Ui.Button("Save PNG…", SaveDesignedPng);
         pngActions.Add(png);
-        Ui.Add(output, Ui.Row(sheetAction, png));
+        Ui.Add(exportBar, Ui.Row(sheetAction, png), 0);
         Ui.TextField(output, "Artwork name", draft.Name, x => draft.Name = x);
 
         var art = Ui.Section(tools, "Background");
@@ -34,12 +34,7 @@ internal sealed partial class MainWindow
             }));
         Ui.Add(art, images);
         if (current.Profile.Id == "ds")
-            Ui.Add(art, Ui.Button("Load Kirby study", () => Run(() =>
-            {
-                LoadKirby();
-                RebuildInspector();
-                SetStatus("Loaded the Kirby Super Star Ultra reconstruction.");
-            })));
+            Ui.Add(art, Ui.Button("Load Kirby study", LoadKirbyStudy));
         Ui.ColorField(art, "Background color", draft.BackgroundColor, x => Changed(() => draft.BackgroundColor = x));
         Ui.Choice(art, "Image fit", new[] { "Fill", "Fit" }, draft.Fill ? "Fill" : "Fit", x => Changed(() => draft.Fill = x == "Fill"));
         if (draft.Background is not null)
@@ -177,6 +172,13 @@ internal sealed partial class MainWindow
             RebuildInspector();
         });
     }
+
+    private void LoadKirbyStudy() => Run(() =>
+    {
+        LoadKirby();
+        RebuildInspector();
+        SetStatus("Loaded the Kirby Super Star Ultra reconstruction.");
+    });
 
     private void LoadKirby()
     {

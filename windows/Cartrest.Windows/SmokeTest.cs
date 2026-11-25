@@ -16,13 +16,15 @@ internal sealed partial class MainWindow
         UpdateProof();
         Screenshot("coaster");
         SetMode(ProofMode.ThreeD);
+        Screenshot("cartridge-front");
         var original = orbit.Orientation;
         orbit.TurnForTesting();
         Require(orbit.Orientation != original, "The 3D workspace did not rotate.");
         Screenshot("cartridge-back");
 
         ShowDesigner(true);
-        LoadKirby();
+        LoadKirbyStudy();
+        Require(current.Draft.Name == "Kirby Super Star Ultra", "The Kirby study did not load.");
         UpdateProof();
         Screenshot("label-designer");
         Require(catalog.Asset("studio-nintendo-outline") is not null && catalog.Asset("studio-hal-inutamago") is not null,
@@ -49,8 +51,8 @@ internal sealed partial class MainWindow
         {
             UpdateLayout();
             var source = (Visual)Content;
-            int width = (int)ActualWidth;
-            int height = (int)ActualHeight;
+            int width = (int)((System.Windows.FrameworkElement)Content).ActualWidth;
+            int height = (int)((System.Windows.FrameworkElement)Content).ActualHeight;
             var screenshot = new RenderTargetBitmap(width, height, 96, 96, PixelFormats.Pbgra32);
             screenshot.Render(source);
             WriteFile(Path.Combine(output, $"{name}.png"), stream =>

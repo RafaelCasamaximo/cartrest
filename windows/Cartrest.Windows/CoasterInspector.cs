@@ -12,9 +12,10 @@ internal sealed partial class MainWindow
     private void BuildCoasterInspector()
     {
         var artwork = Ui.Section(tools, "Artwork");
-        var actions = Ui.Row(Ui.Button("Add images…", AddImages, prominent: true), Ui.Button("Load sample", LoadSample));
-        actions.Children[1].IsEnabled = current.Profile.SampleArtwork is not null;
-        Ui.Add(artwork, actions);
+        Button examples = null!;
+        examples = Ui.Button("Examples…", () => ShowSamples(examples));
+        examples.IsEnabled = Directory.Exists(SampleDirectory()) || current.Profile.SampleArtwork is not null;
+        Ui.Add(artwork, Ui.Row(Ui.Button("Add images…", AddImages, prominent: true), examples));
         if (current.Artwork.Count > 0)
         {
             var list = new ListBox
@@ -89,13 +90,11 @@ internal sealed partial class MainWindow
         if (current.Mode == ProofMode.ThreeD)
             Ui.Add(size, Ui.Button("Reset 3D view", orbit.Reset), 0);
 
-        var output = Ui.Section(tools, "Print & export");
-        PrintControls(output);
+        PrintControls(Ui.Section(tools, "Print settings"));
         pdfAction = Ui.Button("Save A4 PDF…", SavePdf, prominent: true);
         var png = Ui.Button("Save PNG…", SavePng);
         pngActions.Add(png);
-        Ui.Add(output, Ui.Row(pdfAction, png));
-        Ui.Add(output, Ui.Button("Export STL…", SaveStl), 0);
+        Ui.Add(exportBar, Ui.Row(pdfAction, png, Ui.Button("Export STL…", SaveStl)), 0);
     }
 
     private void PrintControls(Panel panel)
@@ -149,17 +148,49 @@ internal sealed partial class MainWindow
         SetStatus((summary + string.Join(" ", errors.Take(2))).Trim(), error: errors.Count > 0);
     }
 
+    private string SampleDirectory() => Path.Combine(ResourcesDirectory, "Samples", current.Profile.Id);
+
+    private void ShowSamples(Button anchor)
+    {
+        var directory = SampleDirectory();
+        if (!Directory.Exists(directory))
+        {
+            LoadSample();
+            return;
+        }
+        var menu = new ContextMenu { PlacementTarget = anchor, Placement = System.Windows.Controls.Primitives.PlacementMode.Bottom };
+        foreach (var path in Directory.EnumerateFiles(directory, "*.png").OrderBy(Path.GetFileName, StringComparer.Ordinal))
+        {
+            var item = new MenuItem { Header = Path.GetFileNameWithoutExtension(path) };
+            item.Click += (_, _) => ImportSample(path);
+            menu.Items.Add(item);
+        }
+        anchor.ContextMenu = menu;
+        menu.IsOpen = true;
+    }
+
     private void LoadSample()
     {
         if (current.Profile.SampleArtwork is not { } name)
             return;
-        Run(() =>
+        var direct = Path.Combine(SampleDirectory(), name);
+        var path = File.Exists(direct) ? direct : Directory.EnumerateFiles(
+            Path.Combine(ResourcesDirectory, "Samples"), "*.png", SearchOption.AllDirectories)
+            .FirstOrDefault(file => Path.GetFileName(file).Equals(name, StringComparison.OrdinalIgnoreCase));
+        if (path is null)
         {
-            AddImage(Path.Combine(ResourcesDirectory, "Samples", name));
-            RebuildInspector();
-            SetStatus($"Added {name}.");
-        });
+            SetStatus($"The sample {name} is unavailable.", error: true);
+            return;
+        }
+        ImportSample(path);
     }
+
+    private void ImportSample(string path) => Run(() =>
+    {
+        AddImage(path);
+        RebuildInspector();
+        SetStatus($"Added {Path.GetFileNameWithoutExtension(path)}.");
+    });
 
     private void AddImage(string path)
     {
