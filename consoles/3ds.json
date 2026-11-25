@@ -28,6 +28,7 @@
     "plastic": "#D1D0CA",
     "recess": "#B3B3AF"
   },
+  "labelTemplate": "3ds",
   "geometry": {
     "unit": "mm",
     "body": {

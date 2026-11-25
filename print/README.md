@@ -9,6 +9,8 @@ Each set contains one label from Mario, Pokémon, Zelda, and Kirby. Cartrest exp
 | Nintendo Switch | 84.8 × 113.6 mm | 2 | [Cartridge labels](cartrest-switch-cartridge-labels-a4.pdf) |
 | Nintendo Switch 2 | 84.8 × 113.6 mm | 2 | [Cartridge labels](cartrest-switch2-cartridge-labels-a4.pdf) |
 
+The Kirby reconstruction has its own A4 page with two copies at the Nintendo DS cut size. [Reconstructed Kirby A4 sheet](kirby-super-star-ultra-reconstructed-a4.pdf) · [Comparison and settings](../examples/reconstructions/kirby-super-star-ultra/README.md)
+
 1. Print on A4 paper at **Actual Size (100%)**.
 2. Measure the **50 mm** reference ruler on the printed page.
 3. Cut along the dashed line and test the fit in the recess. For a resized coaster, export the sheet from the same Cartrest tab and width used to save its STL.

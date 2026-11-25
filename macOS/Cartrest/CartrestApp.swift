@@ -4,16 +4,18 @@ import UniformTypeIdentifiers
 @main
 struct CartrestApp: App {
     @ViewState private var showsProfilePicker = false
+    @ViewState private var designerBusy = false
 
     var body: some Scene {
         Window("Cartrest", id: "cartrest") {
-            ConsoleWorkspace(showsProfilePicker: $showsProfilePicker)
+            ConsoleWorkspace(showsProfilePicker: $showsProfilePicker, designerBusy: $designerBusy)
                 .environment(\.locale, Locale(identifier: "en_US"))
         }
         .defaultSize(width: 1180, height: 790)
         .commands {
             CommandGroup(after: .newItem) {
                 Button("Import Console Profile…") { showsProfilePicker = true }
+                    .disabled(designerBusy)
             }
         }
     }
@@ -21,8 +23,10 @@ struct CartrestApp: App {
 
 struct ConsoleWorkspace: View {
     @Binding var showsProfilePicker: Bool
+    @Binding var designerBusy: Bool
     @ViewState private var models: [ConsoleModel] = []
     @ViewState private var activeID: String?
+    @ViewState private var workspace: EditorWorkspace = .sheet
     @ViewState private var loadingProfiles = true
     @ViewState private var importingProfile = false
     @ViewState private var profileError: String?
@@ -41,7 +45,8 @@ struct ConsoleWorkspace: View {
 
             // Keep each editor mounted so artwork and dimensions survive tab changes.
             ForEach(models) { model in
-                CartrestEditor(model: model, isActive: model.id == activeID)
+                CartrestEditor(model: model, isActive: model.id == activeID,
+                               workspace: $workspace, designerBusy: $designerBusy)
             }
         }
         .frame(minWidth: 800, minHeight: 610)
@@ -49,11 +54,12 @@ struct ConsoleWorkspace: View {
             ToolbarItem(placement: .principal) {
                 if !models.isEmpty {
                     ConsoleTabs(models: models, activeID: $activeID)
+                        .disabled(designerBusy)
                 }
             }
             ToolbarItem(placement: .primaryAction) {
                 Button("Import Console Profile…", systemImage: "plus") { showsProfilePicker = true }
-                    .disabled(loadingProfiles || importingProfile)
+                    .disabled(loadingProfiles || importingProfile || designerBusy)
                     .help("Import a console profile from JSON")
             }
         }
@@ -81,7 +87,7 @@ struct ConsoleWorkspace: View {
     }
 
     private func importProfile(_ url: URL) {
-        guard !loadingProfiles, !importingProfile else { return }
+        guard !loadingProfiles, !importingProfile, !designerBusy else { return }
         importingProfile = true
         let knownIDs = Set(models.map(\.id))
         Task {
@@ -92,7 +98,7 @@ struct ConsoleWorkspace: View {
                 }.value
                 models.append(model)
                 ConsoleCatalog.sort(&models)
-                activeID = model.id
+                if !designerBusy { activeID = model.id }
             } catch {
                 profileError = "\(url.lastPathComponent) — \(error.localizedDescription)"
             }

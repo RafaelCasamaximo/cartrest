@@ -30,6 +30,7 @@
   },
   "artworkFilePrefix": "cartrest",
   "sampleArtwork": "Mario Kart DS.png",
+  "labelTemplate": "ds",
   "geometry": {
     "unit": "mm",
     "body": {

@@ -17,14 +17,14 @@ Cartrest pairs four 3D-printable cartridge models with a SwiftUI editor for labe
 
 ## Install on macOS
 
-1. Download `Cartrest-1.2.1-macOS-universal.dmg`. [GitHub Releases](https://github.com/RafaelCasamaximo/cartrest/releases/latest)
+1. Download `Cartrest-1.3.0-macOS-universal.dmg`. [GitHub Releases](https://github.com/RafaelCasamaximo/cartrest/releases/latest)
 2. Open the disk image and drag **Cartrest** to **Applications**.
 3. Eject the disk image and open Cartrest from Finder.
 
 The app in this release uses ad hoc signing. To verify the download, save the DMG and its `.sha256` file in the same folder and run the following command from that folder.
 
 ```sh
-shasum -a 256 -c Cartrest-1.2.1-macOS-universal.dmg.sha256
+shasum -a 256 -c Cartrest-1.3.0-macOS-universal.dmg.sha256
 ```
 
 ## Lay out a sticker sheet
@@ -36,6 +36,22 @@ shasum -a 256 -c Cartrest-1.2.1-macOS-universal.dmg.sha256
 5. Select **Save A4 PDF…** to print the sheet or **Save PNG…** to export the selected artwork.
 
 Print a test on plain paper at **Actual Size (100%)**, measure the 50 mm ruler, and check the cut against the recess before printing on vinyl. White printable vinyl helps preserve artwork colors over dark gray PLA.
+
+## Design a cartridge label
+
+Open **Label Designer** at the top of the right inspector. The workspace has its own cutting-mat preview for the selected console. Import your art, add grain or a CMYK or monochrome halftone in **Effects**, and choose the console's masthead and code alignment in **Header & Code**. The rating, publisher, studio, and seal each have placement and sizing controls. The catalog includes nine layouts, 57 rating graphics across eight systems, 26 publisher and studio graphics, and three seals or conformity marks.
+
+Use **Add to Sheet** to place the result with your other artwork and open the A4 preview. **Save PNG…** exports it with bleed and resolution metadata. The cut dimensions follow the selected coaster width. [Designer guide](design/labels/README.md) · [Cartridge research and original sources](docs/cartridge-label-references.md)
+
+![The Cartrest Label Designer workspace with a Nintendo DS label and the noise and halftone controls.](docs/images/label-designer.png)
+
+### Cartridge reconstruction
+
+The North American **Kirby Super Star Ultra** sticker was rebuilt in Cartrest from a separate title graphic, a measured sunburst, and era-specific marks. The retail photograph sits beside the reconstruction with its shadowed white header on the Nintendo DS coaster model.
+
+![Kirby Super Star Ultra retail cartridge photograph beside the reconstructed Cartrest label.](docs/images/kirby-cartridge-comparison.jpg)
+
+[Build settings and sources](examples/reconstructions/kirby-super-star-ultra/README.md) · [Importable background](examples/reconstructions/kirby-super-star-ultra/background.png) · [Finished label PNG](examples/reconstructions/kirby-super-star-ultra/label.png) · [Two-copy A4 sheet](print/kirby-super-star-ultra-reconstructed-a4.pdf)
 
 ## Game artwork and print examples
 
@@ -110,6 +126,7 @@ For distribution signing, set `CARTREST_CODESIGN_IDENTITY` to a Developer ID App
 | `consoles/` | Console profiles, construction recipes, and a contributor guide |
 | `model/` | Downloadable meshes, fit tests, and the command-line generator |
 | `design/icon/` | Editable SVG, Icon Composer project, and rendered icon |
+| `design/labels/` | Source-linked cartridge mastheads, ratings, logos, and designer templates |
 | `examples/` | Original retail scans, importable artwork, and source links |
 | `print/` | Full-size A4 sheets for box covers and cartridge labels |
 | `docs/images/` | App screenshots |

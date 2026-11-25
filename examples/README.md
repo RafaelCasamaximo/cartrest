@@ -13,6 +13,8 @@ The Nintendo DS set includes both fitted covers and fitted cartridge labels from
 | The Legend of Zelda: Phantom Hourglass | [PNG](artwork/Zelda%20-%20Phantom%20Hourglass.png) | [PNG](cartridge-labels/Zelda%20-%20Phantom%20Hourglass.png) | [LaunchBox gallery](https://gamesdb.launchbox-app.com/games/images/2133-the-legend-of-zelda-phantom-hourglass) · [VGCollect cartridge photo](https://vgcollect.com/item/43) |
 | Kirby Super Star Ultra | [PNG](artwork/Kirby%20Super%20Star%20Ultra.png) | [PNG](cartridge-labels/Kirby%20Super%20Star%20Ultra.png) | [LaunchBox gallery](https://gamesdb.launchbox-app.com/games/images/10842-kirby-super-star-ultra) · [VGCollect cartridge photo](https://vgcollect.com/item/10838) |
 
+The **Kirby Super Star Ultra** study includes a separate background, a label assembled in Cartrest, and a comparison with the photographed cartridge. [Reconstruction and sources](reconstructions/kirby-super-star-ultra/README.md)
+
 ## Nintendo 3DS
 
 | Game | Fitted cartridge label | Region | Scan source |

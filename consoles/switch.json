@@ -28,6 +28,7 @@
     "plastic": "#383B40",
     "recess": "#24272B"
   },
+  "labelTemplate": "switch",
   "geometry": {
     "unit": "mm",
     "body": {

@@ -1,0 +1,810 @@
+{
+  "schemaVersion": 1,
+  "templates": [
+    {
+      "id": "ds",
+      "name": "Nintendo DS · NTR",
+      "header": "header-ds",
+      "headerStyle": "shadow",
+      "headerHeight": 0.19307,
+      "headerColor": "#F8F7F4",
+      "headerLayout": "ds",
+      "footerHeight": 0.112,
+      "footerColor": "#F7F6F2",
+      "codeColor": "#1C1C1D",
+      "codeAlignment": "right",
+      "codeTypeface": "ocr-b",
+      "codeExample": "NTR-XXXX-USA",
+      "markRow": 0.748
+    },
+    {
+      "id": "dsi",
+      "name": "Nintendo DS · TWL",
+      "header": "header-ds",
+      "headerStyle": "shadow",
+      "headerHeight": 0.19307,
+      "headerColor": "#F8F7F4",
+      "headerLayout": "ds",
+      "footerHeight": 0.112,
+      "footerColor": "#F7F6F2",
+      "codeColor": "#1C1C1D",
+      "codeAlignment": "right",
+      "codeTypeface": "ocr-b",
+      "codeExample": "TWL-XXXX-USA",
+      "markRow": 0.748
+    },
+    {
+      "id": "3ds",
+      "name": "Nintendo 3DS · CTR",
+      "header": "header-3ds",
+      "headerStyle": "flat",
+      "headerHeight": 0.185,
+      "headerColor": "#FAF9F7",
+      "headerLayout": "3ds",
+      "footerHeight": 0.107,
+      "footerColor": "#F8F7F4",
+      "codeColor": "#1C1C1D",
+      "codeExample": "LNA-CTR-XXXX-USA",
+      "markRow": 0.765
+    },
+    {
+      "id": "new-3ds",
+      "name": "New Nintendo 3DS · KTR",
+      "header": "header-new3ds",
+      "headerOnDark": "header-new3ds-reverse",
+      "headerStyle": "flat",
+      "headerHeight": 0.26,
+      "headerColor": "#151719",
+      "headerLayout": "new-3ds",
+      "footerHeight": 0.107,
+      "footerColor": "#151719",
+      "codeColor": "#F8F7F4",
+      "codeExample": "LNA-KTR-XXXX-USA",
+      "markRow": 0.765
+    },
+    {
+      "id": "switch",
+      "name": "Nintendo Switch · LA",
+      "header": "header-switch",
+      "headerStyle": "flat",
+      "headerHeight": 0.231,
+      "headerColor": "#E60012",
+      "footerHeight": 0.108,
+      "footerColor": "#151719",
+      "codeColor": "#F8F7F4",
+      "codeExample": "LA-H-XXXXX-USA",
+      "markRow": 0.776
+    },
+    {
+      "id": "switch2",
+      "name": "Nintendo Switch 2 · LB",
+      "header": "header-switch2",
+      "headerStyle": "flat",
+      "headerHeight": 0.258,
+      "headerColor": "#E60012",
+      "footerHeight": 0.103,
+      "footerColor": "#151719",
+      "codeColor": "#F8F7F4",
+      "codeExample": "LB-XXXXX-USA-0",
+      "markRow": 0.781
+    },
+    {
+      "id": "switch2-edition",
+      "name": "Switch 2 Edition · LN",
+      "header": "header-switch2",
+      "headerStyle": "flat",
+      "headerHeight": 0.258,
+      "headerColor": "#E60012",
+      "footerHeight": 0.103,
+      "footerColor": "#151719",
+      "codeColor": "#F8F7F4",
+      "codeExample": "LN-XXXXX-USA-0",
+      "markRow": 0.781
+    },
+    {
+      "id": "switch2-key",
+      "name": "Switch 2 Game-Key Card · LP",
+      "header": "header-switch2",
+      "headerStyle": "flat",
+      "headerHeight": 0.258,
+      "headerColor": "#E60012",
+      "footerHeight": 0.103,
+      "footerColor": "#151719",
+      "codeColor": "#F8F7F4",
+      "codeExample": "LP-XXXXX-USA-0",
+      "markRow": 0.781
+    },
+    {
+      "id": "custom",
+      "name": "Custom",
+      "header": null,
+      "headerStyle": "hidden",
+      "headerHeight": 0.19,
+      "headerColor": "#F6F3E8",
+      "footerHeight": 0.107,
+      "footerColor": "#202522",
+      "codeColor": "#F6F3E8",
+      "codeExample": "Product code",
+      "markRow": 0.77
+    }
+  ],
+  "headerLayouts": {
+    "ds": {
+      "logoCenter": {"x": 0.532, "y": 0.528},
+      "logoWidth": 0.701,
+      "logoHeight": 0.45,
+      "seam": [
+        {
+          "end": {"x": 0.0, "y": 0.90255}
+        },
+        {
+          "end": {"x": 0.32008, "y": 0.99875}
+        },
+        {
+          "end": {"x": 0.3338, "y": 0.97846},
+          "controls": [
+            {"x": 0.32427, "y": 1.0},
+            {"x": 0.33008, "y": 0.99073}
+          ]
+        },
+        {
+          "end": {"x": 0.35141, "y": 0.92837}
+        },
+        {
+          "end": {"x": 0.36514, "y": 0.90558},
+          "controls": [
+            {"x": 0.35539, "y": 0.9166},
+            {"x": 0.36095, "y": 0.90558}
+          ]
+        },
+        {
+          "end": {"x": 0.63009, "y": 0.90558}
+        },
+        {
+          "end": {"x": 0.64377, "y": 0.92837},
+          "controls": [
+            {"x": 0.63428, "y": 0.90558},
+            {"x": 0.63989, "y": 0.9166}
+          ]
+        },
+        {
+          "end": {"x": 0.66148, "y": 0.97846}
+        },
+        {
+          "end": {"x": 0.67516, "y": 0.99875},
+          "controls": [
+            {"x": 0.66515, "y": 0.99073},
+            {"x": 0.67096, "y": 1.0}
+          ]
+        },
+        {
+          "end": {"x": 1.0, "y": 0.89814}
+        }
+      ]
+    },
+    "3ds": {
+      "logoCenter": {"x": 0.527, "y": 0.565},
+      "logoWidth": 0.795,
+      "logoHeight": 0.55
+    },
+    "new-3ds": {
+      "logoCenter": {"x": 0.5, "y": 0.535},
+      "logoWidth": 0.85,
+      "logoHeight": 0.77
+    }
+  },
+  "headers": [
+    {
+      "id": "header-ds",
+      "name": "Nintendo DS",
+      "file": "header-ds.png",
+      "source": "https://repo.mariocube.com/Marketing/Nintendo%20Design%20Files/AIfiles/DS_L_Card_Label/DS_L_CardLabel.pdf"
+    },
+    {
+      "id": "header-3ds",
+      "name": "Nintendo 3DS",
+      "file": "header-3ds.png",
+      "source": "https://commons.wikimedia.org/wiki/File:Nintendo_3DS_logo.svg"
+    },
+    {
+      "id": "header-new3ds",
+      "name": "New Nintendo 3DS",
+      "file": "header-new3ds.png",
+      "source": "https://commons.wikimedia.org/wiki/File:New_Nintendo_3DS_logo.svg"
+    },
+    {
+      "id": "header-new3ds-reverse",
+      "name": "New Nintendo 3DS · light lettering",
+      "file": "header-new3ds-reverse.png",
+      "source": "https://commons.wikimedia.org/wiki/File:New_Nintendo_3DS_logo.svg"
+    },
+    {
+      "id": "header-switch2",
+      "name": "Nintendo Switch 2",
+      "file": "header-switch2.png",
+      "source": "https://commons.wikimedia.org/wiki/File:Nintendo_Switch_2_logo_transparent.svg"
+    },
+    {
+      "id": "header-switch",
+      "name": "Nintendo Switch game card",
+      "file": "header-switch.png",
+      "source": "https://gamesdb.launchbox-app.com/games/images/79188-mario-kart-8-deluxe"
+    }
+  ],
+  "ratingSystems": [
+    {
+      "id": "esrb",
+      "name": "ESRB — North America",
+      "marks": [
+        {
+          "id": "esrb-e",
+          "name": "E · Everyone",
+          "file": "esrb-e.png",
+          "source": "https://www.esrb.org/ratings-guide/"
+        },
+        {
+          "id": "esrb-e-legacy",
+          "name": "E · Everyone (legacy)",
+          "file": "esrb-e-legacy.png",
+          "source": "https://commons.wikimedia.org/wiki/File:ESRB_Everyone.svg"
+        },
+        {
+          "id": "esrb-e10",
+          "name": "E10+ · Everyone 10+",
+          "file": "esrb-e10.png",
+          "source": "https://www.esrb.org/ratings-guide/"
+        },
+        {
+          "id": "esrb-t",
+          "name": "T · Teen",
+          "file": "esrb-t.png",
+          "source": "https://www.esrb.org/ratings-guide/"
+        },
+        {
+          "id": "esrb-m",
+          "name": "M · Mature 17+",
+          "file": "esrb-m.png",
+          "source": "https://www.esrb.org/ratings-guide/"
+        },
+        {
+          "id": "esrb-ao",
+          "name": "AO · Adults Only 18+",
+          "file": "esrb-ao.png",
+          "source": "https://www.esrb.org/ratings-guide/"
+        },
+        {
+          "id": "esrb-ec",
+          "name": "EC · Early Childhood (retired)",
+          "file": "esrb-ec.png",
+          "source": "https://commons.wikimedia.org/wiki/File:ESRB_2000_Early_Childhood.svg"
+        },
+        {
+          "id": "esrb-rp",
+          "name": "RP · Rating Pending",
+          "file": "esrb-rp.png",
+          "source": "https://www.esrb.org/ratings-guide/"
+        },
+        {
+          "id": "esrb-rpm",
+          "name": "RP · Likely Mature 17+",
+          "file": "esrb-rpm.png",
+          "source": "https://www.esrb.org/ratings-guide/"
+        }
+      ]
+    },
+    {
+      "id": "pegi",
+      "name": "PEGI — Europe",
+      "marks": [
+        {
+          "id": "pegi-3",
+          "name": "PEGI 3",
+          "file": "pegi-3.png",
+          "source": "https://pegi.info/what-do-the-labels-mean"
+        },
+        {
+          "id": "pegi-7",
+          "name": "PEGI 7",
+          "file": "pegi-7.png",
+          "source": "https://pegi.info/what-do-the-labels-mean"
+        },
+        {
+          "id": "pegi-12",
+          "name": "PEGI 12",
+          "file": "pegi-12.png",
+          "source": "https://pegi.info/what-do-the-labels-mean"
+        },
+        {
+          "id": "pegi-16",
+          "name": "PEGI 16",
+          "file": "pegi-16.png",
+          "source": "https://pegi.info/what-do-the-labels-mean"
+        },
+        {
+          "id": "pegi-18",
+          "name": "PEGI 18",
+          "file": "pegi-18.png",
+          "source": "https://pegi.info/what-do-the-labels-mean"
+        },
+        {
+          "id": "pegi-pg",
+          "name": "Parental Guidance Recommended",
+          "file": "pegi-pg.png",
+          "source": "https://pegi.info/what-do-the-labels-mean"
+        }
+      ]
+    },
+    {
+      "id": "cero",
+      "name": "CERO — Japan",
+      "marks": [
+        {
+          "id": "cero-a",
+          "name": "A · All ages",
+          "file": "cero-a.png",
+          "source": "https://www.playstation.com/ja-jp/legal/ratings/"
+        },
+        {
+          "id": "cero-b",
+          "name": "B · 12+",
+          "file": "cero-b.png",
+          "source": "https://www.playstation.com/ja-jp/legal/ratings/"
+        },
+        {
+          "id": "cero-c",
+          "name": "C · 15+",
+          "file": "cero-c.png",
+          "source": "https://www.playstation.com/ja-jp/legal/ratings/"
+        },
+        {
+          "id": "cero-d",
+          "name": "D · 17+",
+          "file": "cero-d.png",
+          "source": "https://www.playstation.com/ja-jp/legal/ratings/"
+        },
+        {
+          "id": "cero-z",
+          "name": "Z · 18+",
+          "file": "cero-z.png",
+          "source": "https://www.playstation.com/ja-jp/legal/ratings/"
+        },
+        {
+          "id": "cero-educational-database",
+          "name": "Education and database",
+          "file": "cero-educational-database.png",
+          "source": "https://www.playstation.com/ja-jp/legal/ratings/"
+        },
+        {
+          "id": "cero-regulations-compatible",
+          "name": "Code compliant",
+          "file": "cero-regulations-compatible.png",
+          "source": "https://www.playstation.com/ja-jp/legal/ratings/"
+        },
+        {
+          "id": "cero-rating-scheduled",
+          "name": "Review scheduled",
+          "file": "cero-rating-scheduled.png",
+          "source": "https://www.playstation.com/ja-jp/legal/ratings/"
+        }
+      ]
+    },
+    {
+      "id": "usk",
+      "name": "USK — Germany",
+      "marks": [
+        {
+          "id": "usk-0",
+          "name": "USK 0",
+          "file": "usk-0.png",
+          "source": "https://usk.de/en/the-usk-age-ratings/"
+        },
+        {
+          "id": "usk-6",
+          "name": "USK 6",
+          "file": "usk-6.png",
+          "source": "https://usk.de/en/the-usk-age-ratings/"
+        },
+        {
+          "id": "usk-12",
+          "name": "USK 12",
+          "file": "usk-12.png",
+          "source": "https://usk.de/en/the-usk-age-ratings/"
+        },
+        {
+          "id": "usk-16",
+          "name": "USK 16",
+          "file": "usk-16.png",
+          "source": "https://usk.de/en/the-usk-age-ratings/"
+        },
+        {
+          "id": "usk-18",
+          "name": "USK 18",
+          "file": "usk-18.png",
+          "source": "https://usk.de/en/the-usk-age-ratings/"
+        }
+      ]
+    },
+    {
+      "id": "acb",
+      "name": "Australian Classification",
+      "marks": [
+        {
+          "id": "acb-g",
+          "name": "G · General",
+          "file": "acb-g.png",
+          "source": "https://www.legislation.gov.au/F2014L01758/2017-02-01/2017-02-01/text/original/pdf#page=17"
+        },
+        {
+          "id": "acb-pg",
+          "name": "PG · Parental Guidance",
+          "file": "acb-pg.png",
+          "source": "https://www.legislation.gov.au/F2014L01758/2017-02-01/2017-02-01/text/original/pdf#page=17"
+        },
+        {
+          "id": "acb-m",
+          "name": "M · Mature",
+          "file": "acb-m.png",
+          "source": "https://www.legislation.gov.au/F2014L01758/2017-02-01/2017-02-01/text/original/pdf#page=17"
+        },
+        {
+          "id": "acb-ma15",
+          "name": "MA 15+ · Mature Accompanied",
+          "file": "acb-ma15.png",
+          "source": "https://www.legislation.gov.au/F2014L01758/2017-02-01/2017-02-01/text/original/pdf#page=17"
+        },
+        {
+          "id": "acb-r18",
+          "name": "R 18+ · Restricted",
+          "file": "acb-r18.png",
+          "source": "https://www.legislation.gov.au/F2014L01758/2017-02-01/2017-02-01/text/original/pdf#page=17"
+        }
+      ]
+    },
+    {
+      "id": "classind",
+      "name": "ClassInd — Brazil",
+      "marks": [
+        {
+          "id": "classind-l",
+          "name": "L · General",
+          "file": "classind-l.png",
+          "source": "https://www.gov.br/mj/pt-br/assuntos/seus-direitos/classificacao-1/simbolos-de-autoclassificacao/"
+        },
+        {
+          "id": "classind-6",
+          "name": "6+",
+          "file": "classind-6.png",
+          "source": "https://www.gov.br/mj/pt-br/assuntos/seus-direitos/classificacao-1/simbolos-de-autoclassificacao/"
+        },
+        {
+          "id": "classind-10",
+          "name": "10+",
+          "file": "classind-10.png",
+          "source": "https://www.gov.br/mj/pt-br/assuntos/seus-direitos/classificacao-1/simbolos-de-autoclassificacao/"
+        },
+        {
+          "id": "classind-12",
+          "name": "12+",
+          "file": "classind-12.png",
+          "source": "https://www.gov.br/mj/pt-br/assuntos/seus-direitos/classificacao-1/simbolos-de-autoclassificacao/"
+        },
+        {
+          "id": "classind-14",
+          "name": "14+",
+          "file": "classind-14.png",
+          "source": "https://www.gov.br/mj/pt-br/assuntos/seus-direitos/classificacao-1/simbolos-de-autoclassificacao/"
+        },
+        {
+          "id": "classind-16",
+          "name": "16+",
+          "file": "classind-16.png",
+          "source": "https://www.gov.br/mj/pt-br/assuntos/seus-direitos/classificacao-1/simbolos-de-autoclassificacao/"
+        },
+        {
+          "id": "classind-18",
+          "name": "18+",
+          "file": "classind-18.png",
+          "source": "https://www.gov.br/mj/pt-br/assuntos/seus-direitos/classificacao-1/simbolos-de-autoclassificacao/"
+        }
+      ]
+    },
+    {
+      "id": "classind-preliminary",
+      "name": "ClassInd — Brazil (self-classified)",
+      "marks": [
+        {
+          "id": "classind-al",
+          "name": "AL · General",
+          "file": "classind-al.png",
+          "source": "https://www.gov.br/mj/pt-br/assuntos/seus-direitos/classificacao-1/simbolos-de-autoclassificacao/"
+        },
+        {
+          "id": "classind-a6",
+          "name": "A6 · 6+",
+          "file": "classind-a6.png",
+          "source": "https://www.gov.br/mj/pt-br/assuntos/seus-direitos/classificacao-1/simbolos-de-autoclassificacao/"
+        },
+        {
+          "id": "classind-a10",
+          "name": "A10 · 10+",
+          "file": "classind-a10.png",
+          "source": "https://www.gov.br/mj/pt-br/assuntos/seus-direitos/classificacao-1/simbolos-de-autoclassificacao/"
+        },
+        {
+          "id": "classind-a12",
+          "name": "A12 · 12+",
+          "file": "classind-a12.png",
+          "source": "https://www.gov.br/mj/pt-br/assuntos/seus-direitos/classificacao-1/simbolos-de-autoclassificacao/"
+        },
+        {
+          "id": "classind-a14",
+          "name": "A14 · 14+",
+          "file": "classind-a14.png",
+          "source": "https://www.gov.br/mj/pt-br/assuntos/seus-direitos/classificacao-1/simbolos-de-autoclassificacao/"
+        },
+        {
+          "id": "classind-a16",
+          "name": "A16 · 16+",
+          "file": "classind-a16.png",
+          "source": "https://www.gov.br/mj/pt-br/assuntos/seus-direitos/classificacao-1/simbolos-de-autoclassificacao/"
+        },
+        {
+          "id": "classind-a18",
+          "name": "A18 · 18+",
+          "file": "classind-a18.png",
+          "source": "https://www.gov.br/mj/pt-br/assuntos/seus-direitos/classificacao-1/simbolos-de-autoclassificacao/"
+        }
+      ]
+    },
+    {
+      "id": "grac",
+      "name": "GRAC / GCRB — South Korea",
+      "marks": [
+        {
+          "id": "grac-all",
+          "name": "All ages",
+          "file": "grac-all.png",
+          "source": "https://www.law.go.kr/LSW/flDownload.do?bylClsCd=110201&flSeq=136417231#page=2"
+        },
+        {
+          "id": "grac-12",
+          "name": "12+",
+          "file": "grac-12.png",
+          "source": "https://www.law.go.kr/LSW/flDownload.do?bylClsCd=110201&flSeq=136417231#page=2"
+        },
+        {
+          "id": "grac-15",
+          "name": "15+",
+          "file": "grac-15.png",
+          "source": "https://www.law.go.kr/LSW/flDownload.do?bylClsCd=110201&flSeq=136417231#page=2"
+        },
+        {
+          "id": "grac-19",
+          "name": "19 mark · Adults only",
+          "file": "grac-19.png",
+          "source": "https://www.law.go.kr/LSW/flDownload.do?bylClsCd=110201&flSeq=136417231#page=2"
+        },
+        {
+          "id": "grac-test",
+          "name": "Test (evaluation)",
+          "file": "grac-test.png",
+          "source": "https://www.law.go.kr/LSW/flDownload.do?bylClsCd=110201&flSeq=136417231#page=2"
+        }
+      ]
+    },
+    {
+      "id": "gsrr",
+      "name": "GSRR — Taiwan",
+      "marks": [
+        {
+          "id": "gsrr-0",
+          "name": "0+ · General",
+          "file": "gsrr-0.png",
+          "source": "https://www.gamerating.org.tw/FileDownload?itemid=2"
+        },
+        {
+          "id": "gsrr-6",
+          "name": "6+ · Protected",
+          "file": "gsrr-6.png",
+          "source": "https://www.gamerating.org.tw/FileDownload?itemid=2"
+        },
+        {
+          "id": "gsrr-12",
+          "name": "12+ · Guidance",
+          "file": "gsrr-12.png",
+          "source": "https://www.gamerating.org.tw/FileDownload?itemid=2"
+        },
+        {
+          "id": "gsrr-15",
+          "name": "15+ · Guidance",
+          "file": "gsrr-15.png",
+          "source": "https://www.gamerating.org.tw/FileDownload?itemid=2"
+        },
+        {
+          "id": "gsrr-18",
+          "name": "18+ · Restricted",
+          "file": "gsrr-18.png",
+          "source": "https://www.gamerating.org.tw/FileDownload?itemid=2"
+        }
+      ]
+    }
+  ],
+  "companies": [
+    {
+      "id": "studio-505",
+      "name": "505 Games",
+      "file": "studio-505.png",
+      "source": "https://www.nintendo.co.jp/ir/pdf/2024/241106.pdf#page=25"
+    },
+    {
+      "id": "studio-arc",
+      "name": "Arc System Works",
+      "file": "studio-arc.png",
+      "source": "https://www.nintendo.co.jp/ir/pdf/2024/241106.pdf#page=25"
+    },
+    {
+      "id": "studio-atlus",
+      "name": "ATLUS",
+      "file": "studio-atlus.png",
+      "source": "https://commons.wikimedia.org/wiki/File:Atlus_logo_%282014%29.svg"
+    },
+    {
+      "id": "studio-bandai-namco",
+      "name": "Bandai Namco",
+      "file": "studio-bandai-namco.png",
+      "source": "https://www.nintendo.co.jp/ir/pdf/2024/241106.pdf#page=25"
+    },
+    {
+      "id": "studio-capcom",
+      "name": "Capcom",
+      "file": "studio-capcom.png",
+      "source": "https://commons.wikimedia.org/wiki/File:Capcom_logo.svg"
+    },
+    {
+      "id": "studio-cygames",
+      "name": "Cygames",
+      "file": "studio-cygames.png",
+      "source": "https://www.nintendo.co.jp/ir/pdf/2024/241106.pdf#page=25"
+    },
+    {
+      "id": "studio-devolver",
+      "name": "Devolver Digital",
+      "file": "studio-devolver.png",
+      "source": "https://www.nintendo.co.jp/ir/pdf/2024/241106.pdf#page=25"
+    },
+    {
+      "id": "studio-ea",
+      "name": "Electronic Arts",
+      "file": "studio-ea.png",
+      "source": "https://www.nintendo.co.jp/ir/pdf/2024/241106.pdf#page=25"
+    },
+    {
+      "id": "studio-fromsoftware",
+      "name": "FromSoftware",
+      "file": "studio-fromsoftware.png",
+      "source": "https://www.nintendo.co.jp/ir/pdf/2024/241106.pdf#page=25"
+    },
+    {
+      "id": "studio-game-freak",
+      "name": "Game Freak",
+      "file": "studio-game-freak.png",
+      "source": "https://commons.wikimedia.org/wiki/File:GAME_FREAK_logo.svg"
+    },
+    {
+      "id": "studio-hal",
+      "name": "HAL Laboratory",
+      "file": "studio-hal.png",
+      "source": "https://commons.wikimedia.org/wiki/File:HAL_Laboratory_Logo.png"
+    },
+    {
+      "id": "studio-hal-inutamago",
+      "name": "HAL Laboratory · Inutamago",
+      "file": "studio-hal-inutamago.png",
+      "source": "https://www.hallab.co.jp/eng/company/symbol"
+    },
+    {
+      "id": "studio-koei-tecmo",
+      "name": "Koei Tecmo",
+      "file": "studio-koei-tecmo.png",
+      "source": "https://www.nintendo.co.jp/ir/pdf/2024/241106.pdf#page=25"
+    },
+    {
+      "id": "studio-konami",
+      "name": "Konami",
+      "file": "studio-konami.png",
+      "source": "https://www.nintendo.co.jp/ir/pdf/2024/241106.pdf#page=25"
+    },
+    {
+      "id": "studio-level-5",
+      "name": "Level-5",
+      "file": "studio-level-5.png",
+      "source": "https://www.nintendo.co.jp/ir/pdf/2024/241106.pdf#page=25"
+    },
+    {
+      "id": "studio-marvelous",
+      "name": "Marvelous",
+      "file": "studio-marvelous.png",
+      "source": "https://www.nintendo.co.jp/ir/pdf/2024/241106.pdf#page=25"
+    },
+    {
+      "id": "studio-nintendo",
+      "name": "Nintendo",
+      "file": "studio-nintendo.png",
+      "source": "https://commons.wikimedia.org/wiki/File:Nintendo.svg"
+    },
+    {
+      "id": "studio-nintendo-outline",
+      "name": "Nintendo · Black outline",
+      "file": "studio-nintendo-outline.png",
+      "source": "https://commons.wikimedia.org/wiki/File:Nintendo.svg"
+    },
+    {
+      "id": "studio-sega",
+      "name": "SEGA",
+      "file": "studio-sega.png",
+      "source": "https://www.nintendo.co.jp/ir/pdf/2024/241106.pdf#page=25"
+    },
+    {
+      "id": "studio-spike-chunsoft",
+      "name": "Spike Chunsoft",
+      "file": "studio-spike-chunsoft.png",
+      "source": "https://www.nintendo.co.jp/ir/pdf/2024/241106.pdf#page=25"
+    },
+    {
+      "id": "studio-square-enix",
+      "name": "Square Enix",
+      "file": "studio-square-enix.png",
+      "source": "https://commons.wikimedia.org/wiki/File:Square_Enix_logo.svg"
+    },
+    {
+      "id": "studio-pokemon",
+      "name": "The Pokémon Company",
+      "file": "studio-pokemon.png",
+      "source": "https://www.ebay.com/itm/225150623148"
+    },
+    {
+      "id": "studio-pokemon-international",
+      "name": "The Pokémon Company International",
+      "file": "studio-pokemon-international.png",
+      "source": "https://commons.wikimedia.org/wiki/File:The_Pok%C3%A9mon_Company_International_logo.svg"
+    },
+    {
+      "id": "studio-thq-nordic",
+      "name": "THQ Nordic",
+      "file": "studio-thq-nordic.png",
+      "source": "https://www.nintendo.co.jp/ir/pdf/2024/241106.pdf#page=25"
+    },
+    {
+      "id": "studio-ubisoft",
+      "name": "Ubisoft",
+      "file": "studio-ubisoft.png",
+      "source": "https://commons.wikimedia.org/wiki/File:Ubisoft_logo.svg"
+    },
+    {
+      "id": "studio-wb-games",
+      "name": "Warner Bros. Games",
+      "file": "studio-wb-games.png",
+      "source": "https://www.nintendo.co.jp/ir/pdf/2024/241106.pdf#page=25"
+    }
+  ],
+  "seals": [
+    {
+      "id": "seal-na",
+      "name": "Official Nintendo Seal",
+      "file": "seal-na.png",
+      "source": "https://commons.wikimedia.org/wiki/File:Nintendo_Official_Seal.svg"
+    },
+    {
+      "id": "seal-eu",
+      "name": "Original Nintendo Seal of Quality",
+      "file": "seal-eu.png",
+      "source": "https://commons.wikimedia.org/wiki/File:Original_Nintendo_Seal_of_Quality_emblem.svg"
+    },
+    {
+      "id": "seal-ce",
+      "name": "CE marking",
+      "file": "seal-ce.png",
+      "source": "https://commons.wikimedia.org/wiki/File:Conformit%C3%A9_Europ%C3%A9enne_%28logo%29.svg"
+    }
+  ]
+}

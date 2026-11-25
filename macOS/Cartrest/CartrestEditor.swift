@@ -10,6 +10,29 @@ enum PreviewMode: String {
     case coaster, cut, sheet, threeD
 }
 
+enum EditorWorkspace: String, CaseIterable, Identifiable {
+    case sheet = "Coaster & Sheet"
+    case designer = "Label Designer"
+
+    var id: Self { self }
+}
+
+struct WorkspacePicker: View {
+    @Binding var selection: EditorWorkspace
+
+    var body: some View {
+        Picker("Workspace", selection: $selection) {
+            ForEach(EditorWorkspace.allCases) { Text($0.rawValue).tag($0) }
+        }
+        .pickerStyle(.segmented)
+        .labelsHidden()
+        .controlSize(.large)
+        .accessibilityLabel("Workspace")
+        .padding(.horizontal, 17)
+        .padding(.vertical, 14)
+    }
+}
+
 private enum ExportFormat: Sendable {
     case pdf, png
 
@@ -41,6 +64,8 @@ private struct SheetPreparation {
 struct CartrestEditor: View {
     let model: ConsoleModel
     let isActive: Bool
+    @Binding var workspace: EditorWorkspace
+    @Binding var designerBusy: Bool
     @Environment(\.colorScheme) private var colorScheme
     @ViewState private var artworks: [SheetArtwork]
     @ViewState private var selection: UUID?
@@ -59,6 +84,8 @@ struct CartrestEditor: View {
     @ViewState private var operation: EditorOperation?
     @ViewState private var status = ""
     @ViewState private var errorMessage: String?
+    @ViewState private var labelDraft: LabelDraft?
+    @ViewState private var labelSection: LabelDesigner.Section = .artwork
 
     private var console: ConsoleProfile { model.profile }
     private var baseGeometry: Geometry { console.geometry }
@@ -67,9 +94,11 @@ struct CartrestEditor: View {
     private var isImporting: Bool { operation == .importing }
     private var hasValidCoasterWidth: Bool { console.widthRange.contains(coasterWidth) }
 
-    init(model: ConsoleModel, isActive: Bool = true) {
+    init(model: ConsoleModel, isActive: Bool, workspace: Binding<EditorWorkspace>, designerBusy: Binding<Bool>) {
         self.model = model
         self.isActive = isActive
+        _workspace = workspace
+        _designerBusy = designerBusy
         let geometry = model.profile.geometry
         let sample = model.sample
         _artworks = ViewState(initialValue: sample.map { [$0] } ?? [])
@@ -135,11 +164,18 @@ struct CartrestEditor: View {
 
     private var editor: some View {
         let preparation = sheetPreparation
-        return HSplitView {
-            preview(preparation)
-                .frame(minWidth: 470, idealWidth: 820, maxWidth: .infinity, maxHeight: .infinity)
-            inspector(preparation)
-                .frame(minWidth: 320, idealWidth: 342, maxWidth: 420, maxHeight: .infinity)
+        return Group {
+            switch workspace {
+            case .sheet:
+                HSplitView {
+                    preview(preparation)
+                        .frame(minWidth: 470, idealWidth: 820, maxWidth: .infinity, maxHeight: .infinity)
+                    inspector(preparation)
+                        .frame(minWidth: 320, idealWidth: 342, maxWidth: 420, maxHeight: .infinity)
+                }
+            case .designer:
+                labelDesigner(preparation)
+            }
         }
         .frame(minWidth: 800, minHeight: 610)
         .background(theme.windowBackground)
@@ -219,11 +255,13 @@ struct CartrestEditor: View {
 
     private func inspector(_ preparation: SheetPreparation) -> some View {
         VStack(spacing: 0) {
+            WorkspacePicker(selection: $workspace).disabled(operation != nil)
+            inspectorDivider
             inspectorHeader(preparation.pages)
             inspectorDivider
             ScrollView {
                 VStack(alignment: .leading, spacing: 17) {
-                    artworkList
+                    artworkList(preparation)
                     if let selected = preparation.editingArtwork {
                         inspectorDivider
                         framingControls(selected, preparation: preparation)
@@ -287,7 +325,7 @@ struct CartrestEditor: View {
             .accessibilityHidden(true)
     }
 
-    private var artworkList: some View {
+    private func artworkList(_ preparation: SheetPreparation) -> some View {
         VStack(alignment: .leading, spacing: 9) {
             HStack {
                 Text("Sheet artwork").font(.headline).accessibilityAddTraits(.isHeader)
@@ -540,6 +578,62 @@ struct CartrestEditor: View {
     }
 
     // MARK: - Import and export
+
+    @ViewBuilder
+    private func labelDesigner(_ preparation: SheetPreparation) -> some View {
+        if let error = preparation.errorMessage {
+            designerUnavailable(error)
+        } else {
+            switch LabelDesignCatalog.bundled {
+            case .success(let catalog):
+                let templateID = console.labelTemplate ?? console.id
+                if let template = catalog.template(templateID) ?? catalog.template("custom") {
+                    LabelDesigner(catalog: catalog, profile: console, geometry: preparation.geometry,
+                                  label: preparation.label, bleed: bleed, dpi: dpi,
+                                  canAddToSheet: onlySampleArtwork || totalCopies < ArtworkExporter.maxCopies,
+                                  addArtwork: addDesignedArtwork,
+                                  draft: Binding(get: { labelDraft ?? LabelDraft(template: template) },
+                                                 set: { labelDraft = $0 }),
+                                  workspace: $workspace, section: $labelSection, isWorking: $designerBusy)
+                } else {
+                    designerUnavailable(LabelDesignError.missingTemplate.localizedDescription)
+                }
+            case .failure(let error):
+                designerUnavailable(error.localizedDescription)
+            }
+        }
+    }
+
+    private func designerUnavailable(_ reason: String) -> some View {
+        HStack(spacing: 0) {
+            ContentUnavailableView("Label Designer Unavailable", systemImage: "rectangle.slash",
+                                   description: Text(reason))
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            Divider()
+            VStack(spacing: 0) {
+                WorkspacePicker(selection: $workspace)
+                inspectorDivider
+                Spacer()
+            }
+            .frame(width: 342)
+            .background(theme.inspectorBackground)
+        }
+    }
+
+    private func addDesignedArtwork(_ artwork: SheetArtwork) {
+        if onlySampleArtwork {
+            artworks = [artwork]
+        } else {
+            guard totalCopies < ArtworkExporter.maxCopies else { return }
+            artworks.append(artwork)
+        }
+        selection = artwork.id
+        page = max(0, sheetPreparation.pages.count - 1)
+        mode = .sheet
+        workspace = .sheet
+        status = "Added \(artwork.name)"
+        AccessibilityNotification.Announcement(status).post()
+    }
 
     private func addImages() {
         guard operation == nil else { return }

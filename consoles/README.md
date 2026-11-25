@@ -33,6 +33,7 @@ To share a profile, submit its JSON in this directory with a short description a
 | `instructions` | Operations interpreted in order to build a printable extrusion with front and rear cuts. |
 | `sampleArtwork` | Optional filename of an image already bundled with Cartrest. |
 | `artworkFilePrefix` | Optional default filename prefix for label exports. The usual prefix is `cartrest-<id>`. |
+| `labelTemplate` | Optional label designer template ID. Omit it to match the profile ID or use the Custom layout. [Template catalog](../design/labels/catalog.json) |
 
 Set `"$schema": "./profile.schema.json"` to enable field completion and validation in a JSON Schema-aware editor. Cartrest additionally checks cross-field constraints such as overlap, fit, depth, and STL closure. [JSON Schema](profile.schema.json)
 

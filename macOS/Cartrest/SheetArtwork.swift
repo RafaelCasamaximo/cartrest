@@ -39,7 +39,7 @@ struct SheetArtwork: Identifiable, Sendable {
         return ArtworkImportResult(artworks: artworks, failures: failures)
     }
 
-    private static func load(_ url: URL, isSample: Bool = false) throws -> SheetArtwork {
+    static func load(_ url: URL, isSample: Bool = false) throws -> SheetArtwork {
         guard let source = CGImageSourceCreateWithURL(url as CFURL, nil) else {
             throw ArtworkImportError.invalidFile(url.lastPathComponent)
         }

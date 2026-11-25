@@ -47,6 +47,10 @@
       "maxLength": 128,
       "pattern": "^[^./\\\\][^/\\\\]*$"
     },
+    "labelTemplate": {
+      "$ref": "#/$defs/id",
+      "description": "Optional ID of a bundled cartridge label designer template."
+    },
     "geometry": {
       "$ref": "#/$defs/geometry"
     },

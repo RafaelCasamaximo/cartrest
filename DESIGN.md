@@ -58,6 +58,8 @@ components:
 
 Console tabs sit in the window toolbar with 15 points of padding on each side of their labels. A scrollable strip and console menu expose additional profiles when the labels exceed the available width. The cutting mat fills the left pane. The cartridge carries the artwork, and a floating display shows the physical dimensions. The right inspector contains preview modes, the artwork list, framing and print controls, and export actions in its footer.
 
+The inspector's workspace picker switches between **Coaster & Sheet** and **Label Designer**. The designer occupies the same window, gives the cut proof the full left pane, and groups design controls into **Artwork**, **Effects**, **Header & Code**, and **Marks**. The footer keeps PNG export and the primary **Add to Sheet** action visible while the controls scroll.
+
 ## Colors
 
 `CartrestTheme` follows macOS light and dark appearance. Green highlights the artwork selection, key readings, and the PDF export action. The window, inspector, and footer use distinct surface tones with 1 pt dividers. Body text uses macOS semantic colors.

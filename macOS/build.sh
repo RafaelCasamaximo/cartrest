@@ -77,6 +77,14 @@ for profile in "$project_dir"/consoles/*.json; do
     /usr/bin/install -m 644 "$profile" "$resources/Consoles/"
   fi
 done
+# The label designer works offline from its versioned reference catalog.
+label_resources="$resources/LabelDesigner"
+mkdir -p "$label_resources/Assets" "$label_resources/Fonts"
+/usr/bin/install -m 644 "$project_dir/design/labels/catalog.json" "$label_resources/catalog.json"
+/usr/bin/install -m 644 "$project_dir"/design/labels/assets/*.png "$label_resources/Assets/"
+/usr/bin/install -m 644 "$project_dir/design/labels/fonts/OCRB.otf" "$project_dir/design/labels/fonts/NOTICE.md" \
+  "$label_resources/Fonts/"
+
 # The optional starter image is also available in the examples.
 /usr/bin/install -m 644 "$project_dir/examples/artwork/Mario Kart DS.png" "$resources/SampleArtwork/"
 if [[ -n "$version" ]]; then

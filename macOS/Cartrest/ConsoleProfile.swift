@@ -11,6 +11,7 @@ struct ConsoleProfile: Decodable, Identifiable, Sendable {
     let widthRange: WidthRange
     let palette: CartridgePalette
     let sampleArtwork: String?
+    let labelTemplate: String?
     let artworkFilePrefix: String?
     let geometry: Geometry
     let instructions: [CartridgeInstruction]
@@ -55,8 +56,9 @@ struct ConsoleProfile: Decodable, Identifiable, Sendable {
     }
 
     private func validate() throws {
-        guard Self.isIdentifier(id), artworkFilePrefix.map(Self.isIdentifier) != false else {
-            throw ProfileError.invalid("Use 1–64 lowercase letters, digits, or single hyphens for the ID and file prefix.")
+        guard Self.isIdentifier(id), artworkFilePrefix.map(Self.isIdentifier) != false,
+              labelTemplate.map(Self.isIdentifier) != false else {
+            throw ProfileError.invalid("Use 1–64 lowercase letters, digits, or single hyphens for the profile ID, template ID, and file prefix.")
         }
         guard !name.isEmpty, name.count <= 64, name == name.trimmingCharacters(in: .whitespacesAndNewlines),
               name.rangeOfCharacter(from: .controlCharacters) == nil else {

@@ -47,7 +47,7 @@ enum ArtworkExporter {
     static let maxCopies = 24
 
     // Quartz uses four bytes per pixel for RGB bitmaps, even for opaque backgrounds.
-    fileprivate static let maxPixels = 16_000_000
+    static let maxPixels = 16_000_000
     private static let bleedRange: ClosedRange<CGFloat> = 0...10
     private static let margin: CGFloat = 10
     // Leave room for print details above the labels and the ruler below them.
@@ -112,14 +112,17 @@ enum ArtworkExporter {
     }
 
     static func png(_ options: ArtworkOptions) throws -> Data {
-        let image = try rasterizedArtwork(options)
+        try png(rasterizedArtwork(options), dpi: options.dpi)
+    }
+
+    static func png(_ image: CGImage, dpi resolution: Int) throws -> Data {
         let data = NSMutableData()
         guard let destination = CGImageDestinationCreateWithData(
             data as CFMutableData, UTType.png.identifier as CFString, 1, nil
         ) else { throw ExportError.png }
 
         // The PNG pHYs chunk records physical resolution in whole pixels per meter.
-        let dpi = boundedDPI(options.dpi)
+        let dpi = boundedDPI(resolution)
         let pixelsPerMeter = Int((CGFloat(dpi) / 0.0254).rounded())
         let metadata: [String: Any] = [
             kCGImagePropertyDPIWidth as String: dpi,
@@ -261,11 +264,11 @@ enum ArtworkExporter {
         min(range.upperBound, max(range.lowerBound, value.isFinite ? value : fallback))
     }
 
-    private static func boundedDPI(_ dpi: Int) -> Int {
+    static func boundedDPI(_ dpi: Int) -> Int {
         min(1200, max(72, dpi))
     }
 
-    private static func pixels(_ value: CGFloat) -> Int {
+    static func pixels(_ value: CGFloat) -> Int {
         guard value > 0, value < CGFloat(Int32.max) else { return 0 }
         return max(1, Int(value.rounded()))
     }
