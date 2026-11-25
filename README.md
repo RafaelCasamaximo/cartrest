@@ -47,7 +47,7 @@ Use **Add to Sheet** to place the result with your other artwork and open the A4
 
 ### Cartridge reconstruction
 
-The North American **Kirby Super Star Ultra** sticker was rebuilt in Cartrest from a separate title graphic, a measured sunburst, and era-specific marks. The retail photograph sits beside the reconstruction with its shadowed white header on the Nintendo DS coaster model.
+The North American **Kirby Super Star Ultra** sticker was rebuilt in Cartrest from a separate title graphic, a measured sunburst, and era-specific marks. The retail photograph sits beside the reconstruction with its white bands and shadowed header on the Nintendo DS coaster model.
 
 ![Kirby Super Star Ultra retail cartridge photograph beside the reconstructed Cartrest label.](docs/images/kirby-cartridge-comparison.jpg)
 
