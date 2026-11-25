@@ -14,7 +14,7 @@ A Cartrest tab is defined by one JSON file. The profile supplies the console nam
 1. Copy the closest profile to a file such as `pocket-cart.json`. Give it a unique `id` that matches the filename, and choose a display `name`. Keep `schemaVersion` at `1`.
 2. Choose nominal body dimensions in millimeters and a `widthRange` that includes the nominal width. Set the front recess and the sticker outline, allowing clearance for the sticker and its chamfer or corners.
 3. Update the `instructions` to match the shell. Add or remove rear features as needed. Each arrow or grip needs a matching geometry entry and instruction.
-4. Set the palette. Use `#RRGGBB` colors for the mat gradient, grid, shell gradient, 3D plastic, and 2D recess. Remove `sampleArtwork` and `artworkFilePrefix` when they belong to the profile you copied.
+4. Set the [palette](#palette). Use `#RRGGBB` colors for the mat gradient, grid, shell gradient, 3D plastic, and 2D recess. Remove `sampleArtwork` and `artworkFilePrefix` when they belong to the profile you copied.
 5. In Cartrest, choose **File → Import Console Profile…** or the toolbar **+**, then select your JSON. The app checks the geometry, builds the solid, opens a tab, and installs a copy in `~/Library/Application Support/Cartrest/Consoles/`. For an installed profile, you can edit the copy in that folder and restart Cartrest to load your changes.
 6. Orbit the model in **3D** to inspect both faces. Save an STL at the nominal width and again at a different width. Check the dimensions and contact details in a slicer, then export a label and check that its cut fits the recess. Print a fit test when checking real printer and vinyl tolerances.
 
@@ -28,13 +28,48 @@ To share a profile, submit its JSON in this directory with a short description a
 | `id` | Stable ID of up to 64 characters using lowercase ASCII letters, digits, and single internal hyphens. Variations need distinct IDs. |
 | `name`, `order` | Visible name of up to 64 characters and an integer sort order. Lower numbers appear first. |
 | `widthRange` | Export range with `min` and `max` in millimeters. Both are within 10–500 mm and include the nominal width. |
-| `palette` | `mat.highlight`, `mat.center`, `mat.shadow`, `grid`, `shell.highlight`, `shell.shadow`, `plastic`, and `recess`. |
+| `palette` | Cutting mat gradient, tint, grid, and shell appearance. |
 | `geometry` | Nominal body, recess, sticker, and optional front details. |
 | `instructions` | Operations interpreted in order to build a printable extrusion with front and rear cuts. |
 | `sampleArtwork` | Optional filename of an image already bundled with Cartrest. |
 | `artworkFilePrefix` | Optional default filename prefix for label exports. The usual prefix is `cartrest-<id>`. |
 
 Set `"$schema": "./profile.schema.json"` to enable field completion and validation in a JSON Schema-aware editor. Cartrest additionally checks cross-field constraints such as overlap, fit, depth, and STL closure. [JSON Schema](profile.schema.json)
+
+### Palette
+
+The cutting mat uses the three sRGB colors in `palette.mat`. Tint is applied to all three stops before the gradient is drawn. The grid, 2D shell, 3D plastic, and front recess have independent colors.
+
+| Field | Value |
+| --- | --- |
+| `mat.highlight`, `mat.center`, `mat.shadow` | Three `#RRGGBB` gradient stops, from light to dark. |
+| `mat.tint.color`, `mat.tint.strength` | Optional tint color and mix from `0` to `1`. A strength of `0.25` mixes 25% tint into each stop. Omit `tint` to use the stops directly. |
+| `mat.direction` | Optional gradient direction. Use `diagonal` for top left to bottom right, `reverseDiagonal` for top right to bottom left, `horizontal` for left to right, or `vertical` for top to bottom. The default is `diagonal`. |
+| `mat.gridOpacity` | Optional multiplier from `0` to `1` for the cutting mat lines. Use `0` to hide the grid or omit the field for standard visibility. |
+| `grid` | Cutting mat line color. |
+| `shell.highlight`, `shell.shadow` | Gradient colors for the 2D shell. |
+| `plastic`, `recess` | 3D plastic color and 2D recess color. |
+
+This palette uses a violet tint and a vertical gradient with a quieter grid.
+
+```json
+{
+  "mat": {
+    "highlight": "#5A6070",
+    "center": "#303746",
+    "shadow": "#171D2C",
+    "tint": { "color": "#6550AA", "strength": 0.30 },
+    "direction": "vertical",
+    "gridOpacity": 0.65
+  },
+  "grid": "#DFE4F2",
+  "shell": { "highlight": "#555A60", "shadow": "#32363B" },
+  "plastic": "#383B40",
+  "recess": "#24272B"
+}
+```
+
+The palette controls the editor preview. The STL uses the dimensions and construction instructions, and the PDF and PNG use the imported artwork.
 
 ### Geometry
 

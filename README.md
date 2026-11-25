@@ -11,20 +11,20 @@
   · macOS 14 or later · Apple Silicon and Intel
 </p>
 
-![The Cartrest editor with console tabs, Mario Kart DS cover artwork on a graphite cartridge, a floating measurement display, and editing controls on the right.](docs/images/editor.png)
+![The Cartrest editor with console tabs, the Mario Kart DS cartridge label on a graphite cartridge, a floating measurement display, and editing controls on the right.](docs/images/editor.png)
 
 Cartrest pairs four 3D-printable cartridge models with a SwiftUI editor for labels that fit their recesses. Choose **Nintendo DS**, **Nintendo 3DS**, **Nintendo Switch**, or **Nintendo Switch 2** to preview the matching model, arrange copies on an A4 sheet, and export a **full-scale PDF** with bleed, a vector cut line, and a 50 mm reference ruler.
 
 ## Install on macOS
 
-1. Download `Cartrest-1.2.0-macOS-universal.dmg`. [GitHub Releases](https://github.com/RafaelCasamaximo/cartrest/releases/latest)
+1. Download `Cartrest-1.2.1-macOS-universal.dmg`. [GitHub Releases](https://github.com/RafaelCasamaximo/cartrest/releases/latest)
 2. Open the disk image and drag **Cartrest** to **Applications**.
 3. Eject the disk image and open Cartrest from Finder.
 
 The app in this release uses ad hoc signing. To verify the download, save the DMG and its `.sha256` file in the same folder and run the following command from that folder.
 
 ```sh
-shasum -a 256 -c Cartrest-1.2.0-macOS-universal.dmg.sha256
+shasum -a 256 -c Cartrest-1.2.1-macOS-universal.dmg.sha256
 ```
 
 ## Lay out a sticker sheet
@@ -35,13 +35,24 @@ shasum -a 256 -c Cartrest-1.2.0-macOS-universal.dmg.sha256
 4. Open **A4 sheet** to check the layout and page count. The larger Switch labels fit two per A4 sheet at the default size and bleed.
 5. Select **Save A4 PDF…** to print the sheet or **Save PNG…** to export the selected artwork.
 
-The examples use the North American retail artwork for Mario Kart DS, Pokémon Platinum Version, The Legend of Zelda: Phantom Hourglass, and Kirby Super Star Ultra. Each A4 sheet fits one of every game. [Source scans and importable artwork](examples/README.md) · [Box cover PDF](print/cartrest-example-a4.pdf) · [Cartridge label PDF](print/cartrest-cartridge-labels-a4.pdf)
-
-| Box covers | Cartridge labels |
-| --- | --- |
-| ![Four labels cropped from the original Nintendo DS box covers.](docs/images/a4-sheet.png) | ![Four labels cropped from the original Nintendo DS cartridge fronts.](docs/images/cartridge-label-sheet.png) |
-
 Print a test on plain paper at **Actual Size (100%)**, measure the 50 mm ruler, and check the cut against the recess before printing on vinyl. White printable vinyl helps preserve artwork colors over dark gray PLA.
+
+## Game artwork and print examples
+
+Each console set includes four retail cartridge labels, one from each series. Open the matching tab to import the PNGs, or download the full-size A4 sheets for a 100 mm coaster. [Import-ready PNGs and sources](examples/README.md) · [Print guide](print/README.md)
+
+| Console | Mario | Pokémon | Zelda | Kirby | A4 |
+| --- | --- | --- | --- | --- | --- |
+| Nintendo DS | Mario Kart DS | Pokémon Platinum Version | Phantom Hourglass | Super Star Ultra | [Cartridge labels](print/cartrest-cartridge-labels-a4.pdf) · [Box covers](print/cartrest-example-a4.pdf) |
+| Nintendo 3DS | Mario Kart 7 | Pokémon X | Ocarina of Time 3D | Triple Deluxe | [Cartridge labels](print/cartrest-3ds-cartridge-labels-a4.pdf) |
+| Nintendo Switch | Mario Kart 8 Deluxe | Pokémon Legends: Arceus | Tears of the Kingdom | Kirby and the Forgotten Land | [Cartridge labels](print/cartrest-switch-cartridge-labels-a4.pdf) |
+| Nintendo Switch 2 | Mario Kart World | Pokémon Legends: Z-A¹ | Breath of the Wild¹ | Kirby Air Riders | [Cartridge labels](print/cartrest-switch2-cartridge-labels-a4.pdf) |
+
+¹ Nintendo Switch 2 Edition.
+
+| Nintendo 3DS | Nintendo Switch | Nintendo Switch 2 |
+| --- | --- | --- |
+| [![The 3DS workspace with the Pokémon X cartridge label.](docs/images/editor-3ds.jpg)](docs/images/editor-3ds.jpg) | [![The Switch workspace with the Tears of the Kingdom cartridge label.](docs/images/editor-switch.jpg)](docs/images/editor-switch.jpg) | [![The Switch 2 workspace with the Kirby Air Riders cartridge label.](docs/images/editor-switch2.jpg)](docs/images/editor-switch2.jpg) |
 
 ## Explore the cartridge in 3D
 
@@ -68,9 +79,13 @@ For a custom size, set **Coaster width (mm)** under **Model dimensions**, then s
 
 Import the STL in millimeters at 100% scale, with the label face up. On the Creality K2 SE with a 0.4 mm nozzle, the 0.20 mm PLA preset is a starting point. Print the small fit test to check the recess and label clearance before committing to the full coaster. [Model and slicing guide](model/README.md)
 
-## Add a console
+## Add a console or a variation
 
-Choose **File → Import Console Profile…** or click the toolbar **+** to install a JSON profile. Cartrest adds a tab with its own colors, dimensions, sticker outline, and recipe for the 3D model. Profiles can define new cartridges or variations of existing ones. [Profile authoring and contribution guide](consoles/README.md) · [JSON Schema](consoles/profile.schema.json)
+1. Copy a profile such as [ds.json](consoles/ds.json) and choose a unique ID and tab name.
+2. Set the cutting mat palette, cartridge dimensions, and sticker outline. Adjust the construction instructions to define the body, label recess, and rear contact details.
+3. Choose **File → Import Console Profile…** or click the toolbar **+**. Inspect the result in **3D** and export a test STL before sharing the JSON or opening a pull request.
+
+The palette can set the tint color and strength, gradient direction, grid opacity, and shell colors for each tab. [Profile authoring guide](consoles/README.md#create-a-profile) · [Palette settings](consoles/README.md#palette) · [Construction instructions](consoles/README.md#construction-instructions) · [JSON Schema](consoles/profile.schema.json)
 
 ## Build from source
 
@@ -105,4 +120,4 @@ The A4 preview uses the same placement calculations as the PDF export. The app a
 
 Thanks to **AF_Inventions** for sharing *Fun Cartridge* and its Nintendo DS coaster design, and to **magu** for publishing the dummy cartridge used as a reference for the original proportions. [Fun Cartridge on Cults](https://cults3d.com/en/3d-model/game/fun-cartridge-keychain-coasters-tray-more) · [Nintendo DS dummy cartridge on Cults](https://cults3d.com/en/3d-model/gadget/nintendo-ds-dummy-cartridge-ds-dsi-3ds-2ds)
 
-The example box covers and cartridge scans come from **LaunchBox Games Database**. Photos from **VGCollect** helped verify the cartridge labels. [LaunchBox Games Database](https://gamesdb.launchbox-app.com/) · [VGCollect](https://vgcollect.com/) · [Sources by game](examples/README.md)
+Thanks to **LaunchBox Games Database**, **VGCollect**, **No-Intro Wiki**, and the photographers who shared the retail artwork and cartridge photos used in the examples. [Sources by game](examples/README.md)

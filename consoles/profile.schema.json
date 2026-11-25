@@ -112,6 +112,40 @@
             },
             "shadow": {
               "$ref": "#/$defs/color"
+            },
+            "tint": {
+              "type": "object",
+              "required": [
+                "color",
+                "strength"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "color": {
+                  "$ref": "#/$defs/color"
+                },
+                "strength": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              },
+              "description": "Color mixed into each gradient stop."
+            },
+            "direction": {
+              "enum": [
+                "diagonal",
+                "reverseDiagonal",
+                "horizontal",
+                "vertical"
+              ],
+              "default": "diagonal"
+            },
+            "gridOpacity": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "default": 1
             }
           }
         },

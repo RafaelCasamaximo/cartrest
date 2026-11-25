@@ -93,14 +93,50 @@ struct CartridgePalette: Decodable, Sendable {
         let highlight: UInt32
         let center: UInt32
         let shadow: UInt32
+        let direction: Direction
+        let gridOpacity: Double
 
-        private enum CodingKeys: CodingKey { case highlight, center, shadow }
+        enum Direction: String, Decodable, Sendable {
+            case diagonal, reverseDiagonal, horizontal, vertical
+        }
+
+        private enum CodingKeys: CodingKey { case highlight, center, shadow, tint, direction, gridOpacity }
 
         init(from decoder: Decoder) throws {
             let values = try decoder.container(keyedBy: CodingKeys.self)
-            highlight = try values.rgb(for: .highlight)
-            center = try values.rgb(for: .center)
-            shadow = try values.rgb(for: .shadow)
+            let tint = try values.decodeIfPresent(Tint.self, forKey: .tint)
+            func stop(_ key: CodingKeys) throws -> UInt32 {
+                let color = try values.rgb(for: key)
+                return tint?.apply(to: color) ?? color
+            }
+            highlight = try stop(.highlight)
+            center = try stop(.center)
+            shadow = try stop(.shadow)
+            direction = try values.decodeIfPresent(Direction.self, forKey: .direction) ?? .diagonal
+            gridOpacity = try values.fraction(for: .gridOpacity, default: 1)
+        }
+    }
+
+    private struct Tint: Decodable, Sendable {
+        let color: UInt32
+        let strength: Double
+
+        private enum CodingKeys: CodingKey { case color, strength }
+
+        init(from decoder: Decoder) throws {
+            let values = try decoder.container(keyedBy: CodingKeys.self)
+            color = try values.rgb(for: .color)
+            strength = try values.fraction(for: .strength)
+        }
+
+        /// Mix the tint into each sRGB stop before interpolating the mat gradient.
+        func apply(to base: UInt32) -> UInt32 {
+            func channel(at shift: UInt32) -> UInt32 {
+                let original = Double((base >> shift) & 255)
+                let tinted = Double((color >> shift) & 255)
+                return UInt32((original + (tinted - original) * strength).rounded()) << shift
+            }
+            return channel(at: 16) | channel(at: 8) | channel(at: 0)
         }
     }
 
@@ -130,6 +166,19 @@ struct CartridgePalette: Decodable, Sendable {
 }
 
 private extension KeyedDecodingContainer {
+    func fraction(for key: Key, default fallback: Double? = nil) throws -> Double {
+        let value: Double
+        if let fallback {
+            value = try decodeIfPresent(Double.self, forKey: key) ?? fallback
+        } else {
+            value = try decode(Double.self, forKey: key)
+        }
+        guard (0...1).contains(value) else {
+            throw DecodingError.dataCorruptedError(forKey: key, in: self, debugDescription: "Use a number from 0 to 1.")
+        }
+        return value
+    }
+
     func rgb(for key: Key) throws -> UInt32 {
         let text = try decode(String.self, forKey: key)
         guard text.wholeMatch(of: #/#[0-9a-fA-F]{6}/#) != nil,

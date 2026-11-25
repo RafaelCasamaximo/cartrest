@@ -10,9 +10,15 @@
   },
   "palette": {
     "mat": {
-      "highlight": "#6E7873",
-      "center": "#3A6252",
-      "shadow": "#234B3B"
+      "highlight": "#81797D",
+      "center": "#3B5C51",
+      "shadow": "#1D3D32",
+      "tint": {
+        "color": "#367455",
+        "strength": 0.25
+      },
+      "direction": "diagonal",
+      "gridOpacity": 1
     },
     "grid": "#E4F1E9",
     "shell": {

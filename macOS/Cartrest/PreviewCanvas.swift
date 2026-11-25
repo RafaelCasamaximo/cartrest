@@ -19,10 +19,11 @@ struct PreviewCanvas: View {
 
     var body: some View {
         Canvas { context, size in
+            let (start, end) = gradientEndpoints(in: size)
             context.fill(Path(CGRect(origin: .zero, size: size)), with: .linearGradient(
                 Gradient(colors: [Color(cartrestHex: palette.mat.highlight), matColor,
                                   Color(cartrestHex: palette.mat.shadow)]),
-                startPoint: .zero, endPoint: CGPoint(x: size.width, y: size.height)
+                startPoint: start, endPoint: end
             ))
             // Reserve room for the measurement display below the coaster or sheet.
             let availableSize = CGSize(width: size.width, height: max(1, size.height - bottomInset))
@@ -45,6 +46,19 @@ struct PreviewCanvas: View {
         }
         .accessibilityLabel(accessibilityDescription)
         .accessibilityAddTraits(.isImage)
+    }
+
+    private func gradientEndpoints(in size: CGSize) -> (CGPoint, CGPoint) {
+        switch palette.mat.direction {
+        case .diagonal:
+            (.zero, CGPoint(x: size.width, y: size.height))
+        case .reverseDiagonal:
+            (CGPoint(x: size.width, y: 0), CGPoint(x: 0, y: size.height))
+        case .horizontal:
+            (.zero, CGPoint(x: size.width, y: 0))
+        case .vertical:
+            (.zero, CGPoint(x: 0, y: size.height))
+        }
     }
 
     private var accessibilityDescription: String {
@@ -77,6 +91,7 @@ struct PreviewCanvas: View {
 
     // Anchor the mat grid to the coaster or artwork so it follows the same scale.
     private func drawGrid(_ context: GraphicsContext, size: CGSize, from origin: CGPoint, scale: CGFloat) {
+        guard palette.mat.gridOpacity > 0 else { return }
         for (step, opacity) in [(5.0, 0.10), (20.0, 0.17)] {
             let spacing = step * scale
             guard spacing >= 3 else { continue }
@@ -89,7 +104,7 @@ struct PreviewCanvas: View {
                 grid.move(to: CGPoint(x: 0, y: y))
                 grid.addLine(to: CGPoint(x: size.width, y: y))
             }
-            context.stroke(grid, with: .color(gridColor.opacity(opacity)), lineWidth: 0.65)
+            context.stroke(grid, with: .color(gridColor.opacity(opacity * palette.mat.gridOpacity)), lineWidth: 0.65)
         }
     }
 
