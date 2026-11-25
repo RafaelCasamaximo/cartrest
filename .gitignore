@@ -8,3 +8,6 @@ __pycache__/
 /.cartrest-build.*
 /.cartrest-release.*
 /model/**/*mm/
+/windows/**/bin/
+/windows/**/obj/
+/windows/.vs/

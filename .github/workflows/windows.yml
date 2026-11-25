@@ -1,0 +1,62 @@
+name: Windows
+
+on:
+  push:
+    paths:
+      - "windows/**"
+      - "consoles/**"
+      - "design/labels/**"
+      - "examples/**"
+      - "model/**"
+      - "LICENSE"
+      - ".github/workflows/windows.yml"
+  pull_request:
+    paths:
+      - "windows/**"
+      - "consoles/**"
+      - "design/labels/**"
+      - "examples/**"
+      - "model/**"
+      - "LICENSE"
+      - ".github/workflows/windows.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  installer:
+    runs-on: windows-2025
+    timeout-minutes: 19
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "10.0.x"
+      - name: Check geometry and print output
+        run: dotnet run --project windows/Cartrest.Checks -c Release -- . "${{ runner.temp }}/cartrest-checks"
+      - name: Package Cartrest
+        shell: pwsh
+        run: |
+          $nsis = Join-Path ${env:ProgramFiles(x86)} "NSIS\makensis.exe"
+          if (-not (Test-Path $nsis)) { choco install nsis --yes --no-progress }
+          if (-not (Test-Path $nsis)) { throw "NSIS could not be installed." }
+          python windows/package.py --makensis "$nsis"
+      - name: Verify install, native app and uninstall
+        shell: pwsh
+        run: ./windows/test-install.ps1 -Output "${{ runner.temp }}/cartrest-smoke"
+      - name: Upload test output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Cartrest-Windows-verification
+          path: |
+            ${{ runner.temp }}/cartrest-checks/
+            ${{ runner.temp }}/cartrest-smoke/
+          if-no-files-found: ignore
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: Cartrest-Windows-x64
+          path: dist/windows/
+          if-no-files-found: error

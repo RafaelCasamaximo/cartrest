@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <AssemblyName>Cartrest</AssemblyName>
+    <StartupObject>Cartrest.Windows.Program</StartupObject>
+    <ApplicationIcon>../installer/Cartrest.ico</ApplicationIcon>
+    <UseRidGraph>false</UseRidGraph>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Cartrest.Core/Cartrest.Core.csproj" />
+    <Resource Include="../installer/Cartrest.ico" Link="Resources/Cartrest.ico" />
+
+    <Content Include="../../consoles/*.json" Link="Resources/Consoles/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="../../design/labels/catalog.json" Link="Resources/Labels/catalog.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="../../design/labels/assets/*.png" Link="Resources/Labels/assets/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="../../design/labels/fonts/*" Link="Resources/Labels/fonts/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="../../examples/cartridge-labels/*.png;../../examples/3ds/*.png;../../examples/switch/*.png;../../examples/switch2/*.png" Link="Resources/Samples/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="../../examples/reconstructions/kirby-super-star-ultra/background.png" Link="Resources/Kirby/background.png" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="../../LICENSE" Link="LICENSE" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="../../design/labels/README.md" Link="Resources/Labels/ASSETS.md" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="../../examples/README.md" Link="Resources/Samples/SOURCES.md" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

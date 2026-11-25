@@ -4,16 +4,19 @@
 
 <h1 align="center">Cartrest</h1>
 
-<p align="center">3D-printable cartridge coasters and a native macOS editor for vinyl labels.</p>
+<p align="center">3D-printable cartridge coasters and native macOS and Windows editors for vinyl labels.</p>
 
 <p align="center">
   <strong><a href="https://github.com/RafaelCasamaximo/cartrest/releases/latest">Download for macOS</a></strong>
   · macOS 14 or later · Apple Silicon and Intel
+  <br>
+  <strong><a href="https://github.com/RafaelCasamaximo/cartrest/releases/tag/v1.4.0-beta.1">Download the Windows beta</a></strong>
+  · Windows 11 x64
 </p>
 
 ![The Cartrest editor with console tabs, the Mario Kart DS cartridge label on a graphite cartridge, a floating measurement display, and editing controls on the right.](docs/images/editor.png)
 
-Cartrest pairs four 3D-printable cartridge models with a SwiftUI editor for labels that fit their recesses. Choose **Nintendo DS**, **Nintendo 3DS**, **Nintendo Switch**, or **Nintendo Switch 2** to preview the matching model, arrange copies on an A4 sheet, and export a **full-scale PDF** with bleed, a vector cut line, and a 50 mm reference ruler.
+Cartrest pairs four 3D-printable cartridge models with native SwiftUI and WPF editors for labels that fit their recesses. Choose **Nintendo DS**, **Nintendo 3DS**, **Nintendo Switch**, or **Nintendo Switch 2** to preview the matching model, arrange copies on an A4 sheet, and export a **full-scale PDF** with bleed, a vector cut line, and a 50 mm reference ruler.
 
 ## Install on macOS
 
@@ -26,6 +29,18 @@ The app in this release uses ad hoc signing. To verify the download, save the DM
 ```sh
 shasum -a 256 -c Cartrest-1.3.0-macOS-universal.dmg.sha256
 ```
+
+## Install on Windows
+
+Download `Cartrest-1.4.0-beta.1-Windows-x64-Setup.exe`, run the setup wizard, and open **Cartrest** from the Start menu. Setup includes the .NET runtime and installs for your Windows account. The beta installer is unsigned. [Windows beta release](https://github.com/RafaelCasamaximo/cartrest/releases/tag/v1.4.0-beta.1)
+
+Compare the SHA-256 shown below with the value in the accompanying `.sha256` file.
+
+```powershell
+Get-FileHash .\Cartrest-1.4.0-beta.1-Windows-x64-Setup.exe -Algorithm SHA256
+```
+
+The Windows beta includes all four stock console tabs, custom JSON profiles, a rotatable 3D proof, parametric STL export, A4 and PNG export, and the Label Designer. In **Nintendo DS → Label Designer**, choose **Load Kirby study** to open the reconstruction with the original-style stepped header and code band. [Windows build and setup guide](windows/README.md)
 
 ## Lay out a sticker sheet
 
@@ -125,6 +140,7 @@ For distribution signing, set `CARTREST_CODESIGN_IDENTITY` to a Developer ID App
 | `macOS/Release/` | Disk image background and packaging settings |
 | `consoles/` | Console profiles, construction recipes, and a contributor guide |
 | `model/` | Downloadable meshes, fit tests, and the command-line generator |
+| `windows/` | Native Windows app, C# print and mesh engine, and x64 installer |
 | `design/icon/` | Editable SVG, Icon Composer project, and rendered icon |
 | `design/labels/` | Source-linked cartridge mastheads, ratings, logos, and designer templates |
 | `examples/` | Original retail scans, importable artwork, and source links |
@@ -132,6 +148,12 @@ For distribution signing, set `CARTREST_CODESIGN_IDENTITY` to a Developer ID App
 | `docs/images/` | App screenshots |
 
 The A4 preview uses the same placement calculations as the PDF export. The app and the command-line model generator read the same console profiles. Command-line builds bundle a static `.icns` made from the Liquid Glass export. [Icon Composer project](design/icon/Cartrest.icon) · [SVG source](design/icon/Cartrest.svg) · [Icon editing and export](design/icon/README.md) · [Design notes](DESIGN.md)
+
+## Contributing and licenses
+
+Import the [Nintendo DS Graphite example](examples/profiles/ds-graphite.json) to try a custom palette, then follow the [profile guide](consoles/README.md) to define a new console. The [contribution guide](CONTRIBUTING.md) covers validation and platform builds.
+
+The application code and stock profile JSON use the [MIT License](LICENSE). The original STL files use [CC BY-NC 4.0](model/LICENSE.md). [Licensing and asset credits](LICENSING.md)
 
 ## Acknowledgments
 
