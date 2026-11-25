@@ -101,7 +101,7 @@ def main():
         target = scratch / name
         subprocess.run([
             args.makensis,
-            f"{define}VERSION={version}", f"{define}PAYLOAD={stage}", f"{define}SETUP={target}",
+            f"{define}VERSION={version}", f"{define}PAYLOAD_GLOB={stage / '*'}", f"{define}SETUP={target}",
             f"{define}UNINSTALL_FILES={manifest}", f"{define}SIZE_KIB={size}", "Cartrest.nsi"
         ], cwd=WINDOWS / "installer", check=True)
         shutil.copyfile(target, setup)

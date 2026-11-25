@@ -76,7 +76,7 @@ FunctionEnd
 Section "Cartrest"
     SetOutPath "$INSTDIR"
     SetOverwrite on
-    File /r "${PAYLOAD}/*"
+    File /r "${PAYLOAD_GLOB}"
     WriteUninstaller "$INSTDIR\Uninstall.exe"
     CreateShortCut "$SMPROGRAMS\Cartrest.lnk" "$INSTDIR\Cartrest.exe" "" "$INSTDIR\Cartrest.exe"
 
