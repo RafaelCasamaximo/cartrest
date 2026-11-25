@@ -14,7 +14,6 @@ internal static class Program
         bool smoke = args is ["--smoke-test", _];
         string? output = smoke ? Path.GetFullPath(args[1]) : null;
         var app = new Application { ShutdownMode = ShutdownMode.OnMainWindowClose };
-        Appearance.Apply(app, smoke ? true : null);
         if (smoke)
             RenderOptions.ProcessRenderMode = System.Windows.Interop.RenderMode.SoftwareOnly;
 
@@ -23,12 +22,13 @@ internal static class Program
             app.Dispatcher.InvokeAsync(() => Appearance.Apply(app));
         }
 
-        if (!smoke)
-            SystemEvents.UserPreferenceChanged += FollowSystemAppearance;
         try
         {
             if (output is not null)
                 Directory.CreateDirectory(output);
+            Appearance.Apply(app, smoke ? true : null);
+            if (!smoke)
+                SystemEvents.UserPreferenceChanged += FollowSystemAppearance;
             var window = new MainWindow(output is null ? null : Path.Combine(output, "profiles"));
             window.SourceInitialized += (_, _) => Appearance.UpdateCaption(window, smoke ||
                 (Appearance.ReadSystemAppearance() && !SystemParameters.HighContrast));

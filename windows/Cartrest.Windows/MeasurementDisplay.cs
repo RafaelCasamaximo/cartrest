@@ -47,9 +47,10 @@ internal sealed class MeasurementDisplay : Border
 
         for (int i = 0; i < readers.Length; i++)
         {
-            names[i] = Ui.Label("", 11.5, Ink, true);
+            names[i] = Ui.Label("", 11.5, strong: true);
             names[i].TextWrapping = TextWrapping.NoWrap;
-            values[i] = Ui.Label("", 15, Ink, true);
+            values[i] = Ui.Label("", 15, strong: true);
+            names[i].Foreground = values[i].Foreground = Ink;
             values[i].FontFamily = new FontFamily("Consolas");
             values[i].TextWrapping = TextWrapping.NoWrap;
             var cell = new StackPanel { VerticalAlignment = VerticalAlignment.Center };

@@ -16,7 +16,7 @@ internal sealed partial class MainWindow
 
     private void BuildCoasterInspector()
     {
-        artworkCount = Ui.Label("", 12, Ui.AccentText, true);
+        artworkCount = Ui.Label("", 12, "AccentText", true);
         artworkCount.VerticalAlignment = VerticalAlignment.Center;
         var artwork = Ui.Section(tools, "Sheet artwork", artworkCount);
         artworkList = null;
@@ -26,10 +26,10 @@ internal sealed partial class MainWindow
             {
                 MaxHeight = 175, MinHeight = 46, Padding = new Thickness(0),
                 Background = Brushes.Transparent, BorderThickness = new Thickness(0),
-                Foreground = Ui.Text, ItemContainerStyle = Ui.ArtworkItemStyle(),
+                ItemContainerStyle = Ui.ArtworkItemStyle(),
                 HorizontalContentAlignment = HorizontalAlignment.Stretch
             };
-            artworkList = list;
+            artworkList = Appearance.Use(list, Control.ForegroundProperty, "Text");
             ScrollViewer.SetHorizontalScrollBarVisibility(list, ScrollBarVisibility.Disabled);
             list.Resources[typeof(System.Windows.Controls.Primitives.ScrollBar)] = Ui.ScrollbarStyle();
             AutomationProperties.SetName(list, "Sheet artwork");
@@ -40,10 +40,10 @@ internal sealed partial class MainWindow
                     Source = ProofRenderer.Thumbnail(item), Width = 38, Height = 38, Stretch = Stretch.UniformToFill
                 };
                 thumbnail.Clip = new RectangleGeometry(new Rect(0, 0, 38, 38), 6, 6);
-                var line = Ui.Label(item.Name, 13, Ui.Text, true);
+                var line = Ui.Label(item.Name, 13, strong: true);
                 line.TextTrimming = TextTrimming.CharacterEllipsis;
                 line.TextWrapping = TextWrapping.NoWrap;
-                var dimensions = Ui.Label($"{item.Bitmap.Width:N0} × {item.Bitmap.Height:N0} px", 11, Ui.Secondary);
+                var dimensions = Ui.Label($"{item.Bitmap.Width:N0} × {item.Bitmap.Height:N0} px", 11, "Secondary");
                 var copy = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
                 copy.Children.Add(line);
                 copy.Children.Add(dimensions);
@@ -69,7 +69,7 @@ internal sealed partial class MainWindow
         }
         else
         {
-            Ui.Add(artwork, Ui.Label("Add a cartridge label or cover image to start a sheet.", 13, Ui.Secondary), 10);
+            Ui.Add(artwork, Ui.Label("Add a cartridge label or cover image to start a sheet.", 13, "Secondary"), 10);
         }
 
         Button examples = null!;
@@ -101,7 +101,7 @@ internal sealed partial class MainWindow
         var size = Ui.Section(tools, "Model dimensions");
         var range = current.Profile.WidthRange;
         Ui.Number(size, "Coaster width", current.Width, range.Min, range.Max, x => Changed(() => current.Width = x), unit: "mm");
-        var check = new CheckBox { Content = "Custom print trim", Foreground = Ui.Text, IsChecked = current.CustomTrim };
+        var check = Appearance.Use(new CheckBox { Content = "Custom print trim", IsChecked = current.CustomTrim }, Control.ForegroundProperty, "Text");
         check.Click += (_, _) =>
         {
             if (!current.CustomTrim)
@@ -112,7 +112,7 @@ internal sealed partial class MainWindow
         Ui.Add(size, check, 4);
         if (current.CustomTrim)
         {
-            Ui.Add(size, Ui.Label("The coaster keeps its scaled recess. These values control the print cut.", 12, Ui.Secondary));
+            Ui.Add(size, Ui.Label("The coaster keeps its scaled recess. These values control the print cut.", 12, "Secondary"));
             Ui.Number(size, "Trim width (mm)", current.CustomLabel.Width, 20, 160,
                 v => Changed(() => current.CustomLabel = current.CustomLabel with { Width = v }), false);
             Ui.Number(size, "Trim height (mm)", current.CustomLabel.Height, 20, 160,

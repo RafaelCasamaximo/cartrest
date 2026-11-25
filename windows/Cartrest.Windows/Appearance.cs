@@ -24,7 +24,6 @@ internal static class Appearance
         ("Control", 0x303B36, 0xDDE6DD),
         ("Active", 0x485650, 0xC8D8CD),
         ("Hovered", 0x3B4942, 0xD3DFD5),
-        ("Pressed", 0x526359, 0xC4D3C9),
         ("Field", 0x171E1B, 0xF8FAF6),
         ("FieldEdge", 0x4C6056, 0x819587),
         ("Text", 0xECF1ED, 0x242E28),
@@ -55,10 +54,11 @@ internal static class Appearance
         {
             var color = highContrast ? HighContrastColor(role) : Rgb(useDark ? darkValue : lightValue);
             var key = "Cartrest." + role;
-            if (app.Resources[key] is SolidColorBrush existing && !existing.IsFrozen)
-                existing.Color = color;
-            else
-                app.Resources[key] = new SolidColorBrush(color);
+            if (app.Resources[key] is SolidColorBrush existing && existing.Color == color)
+                continue;
+            var brush = new SolidColorBrush(color);
+            brush.Freeze();
+            app.Resources[key] = brush;
         }
         if (app.MainWindow is { } window)
             UpdateCaption(window, useDark && !highContrast);
@@ -81,14 +81,19 @@ internal static class Appearance
         Registry.GetValue(@"HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize",
             "AppsUseLightTheme", 1) is 0;
 
-    internal static Brush Brush(string role) => (Brush)Application.Current.Resources["Cartrest." + role];
+    // Dynamic resources retheme controls even when WPF has frozen their composed brushes.
+    internal static T Use<T>(T element, DependencyProperty property, string role) where T : FrameworkElement
+    {
+        element.SetResourceReference(property, "Cartrest." + role);
+        return element;
+    }
 
     internal static Color Rgb(uint value) => Color.FromRgb((byte)(value >> 16), (byte)(value >> 8), (byte)value);
 
     private static Color HighContrastColor(string role) => role switch
     {
         "Accent" => SystemColors.HighlightColor,
-        "Selection" or "Active" or "Hovered" or "Pressed" => SystemColors.WindowColor,
+        "Selection" or "Active" or "Hovered" => SystemColors.WindowColor,
         "AccentInk" => SystemColors.HighlightTextColor,
         "Text" or "Secondary" or "AccentText" or "Error" => SystemColors.WindowTextColor,
         "Divider" or "SelectionEdge" or "FieldEdge" or "Focus" or "Track" or "Thumb" or "Scroller" => SystemColors.WindowTextColor,

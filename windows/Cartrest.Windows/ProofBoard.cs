@@ -9,9 +9,9 @@ namespace Cartrest.Windows;
 
 internal sealed class ProofBoard : FrameworkElement
 {
-    private Brush mat = Ui.Panel;
-    private Pen fine = new(Ui.Edge, 1);
-    private Pen major = new(Ui.Edge, 1);
+    private Brush mat = Brushes.Transparent;
+    private Pen fine = new(Brushes.Transparent, 1);
+    private Pen major = new(Brushes.Transparent, 1);
     private BitmapSource? image;
     private double physicalWidth = 100;
     private bool paper;

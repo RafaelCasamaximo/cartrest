@@ -11,15 +11,6 @@ namespace Cartrest.Windows;
 
 internal static class Ui
 {
-    internal static Brush Window => Appearance.Brush("Window");
-    internal static Brush Panel => Appearance.Brush("Inspector");
-    internal static Brush Input => Appearance.Brush("Control");
-    internal static Brush Edge => Appearance.Brush("Divider");
-    internal static Brush Text => Appearance.Brush("Text");
-    internal static Brush Secondary => Appearance.Brush("Secondary");
-    internal static Brush Accent => Appearance.Brush("Accent");
-    internal static Brush AccentText => Appearance.Brush("AccentText");
-
     internal static SolidColorBrush Brush(string hex)
     {
         var brush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(hex));
@@ -29,14 +20,14 @@ internal static class Ui
 
     internal static Color ColorFrom(SKColor color) => Color.FromArgb(color.Alpha, color.Red, color.Green, color.Blue);
 
-    internal static TextBlock Label(string text, double size = 13, Brush? foreground = null, bool strong = false) => new()
-    {
-        Text = text,
-        FontSize = size,
-        Foreground = foreground ?? Text,
-        FontWeight = strong ? FontWeights.SemiBold : FontWeights.Normal,
-        TextWrapping = TextWrapping.Wrap
-    };
+    internal static TextBlock Label(string text, double size = 13, string role = "Text", bool strong = false) =>
+        Appearance.Use(new TextBlock
+        {
+            Text = text,
+            FontSize = size,
+            FontWeight = strong ? FontWeights.SemiBold : FontWeights.Normal,
+            TextWrapping = TextWrapping.Wrap
+        }, TextBlock.ForegroundProperty, role);
 
     internal static Button Button(string caption, Action action, bool prominent = false)
     {
@@ -49,10 +40,10 @@ internal static class Ui
             Cursor = Cursors.Hand,
             FontSize = 13,
             FontWeight = FontWeights.Medium,
-            Foreground = prominent ? Appearance.Brush("AccentInk") : Text,
-            Background = prominent ? Accent : Input,
             Template = (ControlTemplate)ControlStyles.Value["Action"]
         };
+        Appearance.Use(button, Control.ForegroundProperty, prominent ? "AccentInk" : "Text");
+        Appearance.Use(button, Control.BackgroundProperty, prominent ? "Accent" : "Control");
         button.Click += (_, _) => action();
         return button;
     }
@@ -166,7 +157,7 @@ internal static class Ui
             </ControlTemplate.Triggers>
           </ControlTemplate>
           <Style x:Key="VerticalScroller" TargetType="ScrollBar">
-            <Setter Property="Width" Value="11" />
+            <Setter Property="Width" Value="9" />
             <Setter Property="Template">
               <Setter.Value>
                 <ControlTemplate TargetType="ScrollBar">
@@ -224,7 +215,7 @@ internal static class Ui
     {
         var content = new StackPanel();
         var heading = new DockPanel { Margin = new Thickness(0, 0, 0, 9) };
-        var title = Label(caption, 14, Text, true);
+        var title = Label(caption, 14, strong: true);
         title.VerticalAlignment = VerticalAlignment.Center;
         AutomationProperties.SetHeadingLevel(title, AutomationHeadingLevel.Level2);
         if (accessory is not null)
@@ -234,13 +225,13 @@ internal static class Ui
         }
         heading.Children.Add(title);
         content.Children.Add(heading);
-        parent.Children.Add(new Border
+        var section = new Border
         {
             Padding = new Thickness(0, 13, 0, 13),
             Child = content,
-            BorderBrush = Edge,
             BorderThickness = new Thickness(0, parent.Children.Count > 0 ? 1 : 0, 0, 0)
-        });
+        };
+        parent.Children.Add(Appearance.Use(section, Border.BorderBrushProperty, "Divider"));
         return content;
     }
 
@@ -258,19 +249,19 @@ internal static class Ui
             MaxLength = maxLength,
             Padding = new Thickness(8, 4, 8, 4),
             FontSize = 13,
-            MinHeight = 28,
-            Background = Appearance.Brush("Field"),
-            Foreground = Text,
-            CaretBrush = Text,
-            BorderBrush = Appearance.Brush("FieldEdge")
+            MinHeight = 28
         };
+        Appearance.Use(entry, Control.BackgroundProperty, "Field");
+        Appearance.Use(entry, Control.ForegroundProperty, "Text");
+        Appearance.Use(entry, TextBox.CaretBrushProperty, "Text");
+        Appearance.Use(entry, Control.BorderBrushProperty, "FieldEdge");
         AutomationProperties.SetName(entry, name);
         return entry;
     }
 
     internal static void TextField(Panel container, string name, string value, Action<string> changed)
     {
-        Add(container, Label(name, 13, Text), 4);
+        Add(container, Label(name, 13), 4);
         var entry = Entry(name, value);
         entry.TextChanged += (_, _) => changed(entry.Text);
         Add(container, entry);
@@ -285,11 +276,11 @@ internal static class Ui
         entry.Width = slider ? 59 : 79;
         entry.TextAlignment = TextAlignment.Right;
         entry.Margin = new Thickness(8, 0, 0, 0);
-        var label = Label(name, 13, Text);
+        var label = Label(name, 13);
         label.VerticalAlignment = VerticalAlignment.Center;
         if (unit is not null)
         {
-            var suffix = Label(unit, 11, Secondary);
+            var suffix = Label(unit, 11, "Secondary");
             suffix.MinWidth = 14;
             suffix.Margin = new Thickness(4, 0, 0, 0);
             suffix.VerticalAlignment = VerticalAlignment.Center;
@@ -354,7 +345,7 @@ internal static class Ui
         entry.TextChanged += (_, _) =>
         {
             bool valid = TryNumber(entry.Text, out var x) && x >= min && x <= max;
-            entry.BorderBrush = Appearance.Brush(valid ? "FieldEdge" : "Error");
+            Appearance.Use(entry, Control.BorderBrushProperty, valid ? "FieldEdge" : "Error");
             entry.ToolTip = valid ? null : $"Enter a number from {Format(min)} to {Format(max)}.";
         };
         Add(container, row, 5);
@@ -371,7 +362,7 @@ internal static class Ui
         DockPanel.SetDock(swatch, Dock.Right);
         row.Children.Add(entry);
         row.Children.Add(swatch);
-        var label = Label(name, 12, Secondary);
+        var label = Label(name, 12, "Secondary");
         label.VerticalAlignment = VerticalAlignment.Center;
         row.Children.Add(label);
         entry.TextChanged += (_, _) =>
@@ -379,12 +370,12 @@ internal static class Ui
             if (entry.Text is { Length: 7 } && entry.Text.StartsWith('#') && SKColor.TryParse(entry.Text, out var result))
             {
                 swatch.Background = new SolidColorBrush(ColorFrom(result));
-                entry.BorderBrush = Appearance.Brush("FieldEdge");
+                Appearance.Use(entry, Control.BorderBrushProperty, "FieldEdge");
                 changed(result);
             }
             else
             {
-                entry.BorderBrush = Appearance.Brush("Error");
+                Appearance.Use(entry, Control.BorderBrushProperty, "Error");
             }
         };
         Add(container, row);
@@ -392,16 +383,16 @@ internal static class Ui
 
     internal static ComboBox Choice<T>(Panel container, string name, IEnumerable<T> options, T selected, Action<T> changed)
     {
-        Add(container, Label(name, 13, Text), 4);
+        Add(container, Label(name, 13), 4);
         var picker = new ComboBox
         {
             ItemsSource = options,
             SelectedItem = selected,
-            Foreground = Text,
-            Background = Input,
             MinHeight = 29,
             Padding = new Thickness(8, 3, 8, 3)
         };
+        Appearance.Use(picker, Control.BackgroundProperty, "Control");
+        Appearance.Use(picker, Control.ForegroundProperty, "Text");
         AutomationProperties.SetName(picker, name);
         picker.SelectionChanged += (_, _) =>
         {

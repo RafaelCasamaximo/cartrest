@@ -22,8 +22,8 @@ internal sealed class SegmentBar<T> : Border where T : notnull
         this.caption = caption;
         this.changed = changed;
         this.console = console;
-        strip = expanded ? new UniformGrid { Rows = 1 } : new StackPanel { Orientation = Orientation.Horizontal };
-        Background = Ui.Input;
+        strip = expanded ? new Grid() : new StackPanel { Orientation = Orientation.Horizontal };
+        Appearance.Use(this, BackgroundProperty, "Control");
         CornerRadius = new CornerRadius(console ? 15 : 8);
         Padding = new Thickness(3);
         Child = strip;
@@ -37,10 +37,13 @@ internal sealed class SegmentBar<T> : Border where T : notnull
     {
         choices.Clear();
         strip.Children.Clear();
+        var layout = strip as Grid;
+        layout?.ColumnDefinitions.Clear();
         foreach (var value in items)
         {
             string title = caption(value);
-            var text = Ui.Label(title, 13, Ui.Text, true);
+            var text = Ui.Label(title, 13, strong: true);
+            text.FontFamily = new System.Windows.Media.FontFamily("Segoe UI");
             text.TextWrapping = TextWrapping.NoWrap;
             text.TextTrimming = TextTrimming.CharacterEllipsis;
             var item = new RadioButton
@@ -50,13 +53,23 @@ internal sealed class SegmentBar<T> : Border where T : notnull
                 Padding = console ? new Thickness(14, 4, 14, 4) : new Thickness(6, 4, 6, 4),
                 MaxWidth = console ? 209 : double.PositiveInfinity,
                 MinHeight = 26,
-                Background = Appearance.Brush(console ? "Selection" : "Active"),
                 FontSize = 13,
                 Cursor = Cursors.Hand,
                 Template = Ui.SegmentTemplate(),
                 ToolTip = title
             };
+            Appearance.Use(item, Control.BackgroundProperty, console ? "Selection" : "Active");
             AutomationProperties.SetName(item, title);
+            if (layout is not null)
+            {
+                // Give longer labels more room while letting the whole selector track the inspector width.
+                text.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+                layout.ColumnDefinitions.Add(new()
+                {
+                    Width = new GridLength(Math.Max(53, text.DesiredSize.Width + 25), GridUnitType.Star)
+                });
+                Grid.SetColumn(item, layout.ColumnDefinitions.Count - 1);
+            }
             item.Checked += (_, _) =>
             {
                 if (!updating)

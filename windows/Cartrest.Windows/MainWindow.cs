@@ -35,9 +35,9 @@ internal sealed partial class MainWindow : Window
     private readonly StackPanel exportBar = new();
     private readonly ScrollViewer scroll;
     private readonly MeasurementDisplay display = new();
-    private readonly TextBlock printSummary = Ui.Label("", 12, Ui.AccentText, true);
-    private readonly TextBlock pixelSummary = Ui.Label("", 12, Ui.Secondary);
-    private readonly TextBlock status = Ui.Label("", 12, Ui.Secondary);
+    private readonly TextBlock printSummary = Ui.Label("", 12, "AccentText", true);
+    private readonly TextBlock pixelSummary = Ui.Label("", 12, "Secondary");
+    private readonly TextBlock status = Ui.Label("", 12, "Secondary");
     private readonly Image toolbarMark = new()
     {
         Width = 27, Height = 27, Stretch = Stretch.Uniform, Margin = new Thickness(0, 0, 9, 0),
@@ -71,16 +71,19 @@ internal sealed partial class MainWindow : Window
         MinWidth = 850;
         MinHeight = 600;
         WindowStartupLocation = WindowStartupLocation.CenterScreen;
-        Background = Ui.Window;
+        Appearance.Use(this, BackgroundProperty, "Window");
         FontFamily = new FontFamily("Segoe UI");
-        Foreground = Ui.Text;
+        Appearance.Use(this, ForegroundProperty, "Text");
         UseLayoutRounding = true;
         SnapsToDevicePixels = true;
         TextOptions.SetTextFormattingMode(this, TextFormattingMode.Display);
         Icon = LoadImage("Cartrest.ico");
         toolbarMark.Source = LoadImage("Cartrest-Mark.png");
         RenderOptions.SetBitmapScalingMode(toolbarMark, BitmapScalingMode.HighQuality);
-        tabs = new SegmentBar<Workspace>("Console workspaces", w => w.Profile.Name, Select, console: true);
+        tabs = new SegmentBar<Workspace>("Console workspaces", w => w.Profile.Name, Select, console: true)
+        {
+            HorizontalAlignment = HorizontalAlignment.Center
+        };
         viewSelector = new SegmentBar<bool>("Workspace", value => value ? "Label Designer" : "Coaster & Sheet", ShowDesigner)
         {
             HorizontalAlignment = HorizontalAlignment.Center
@@ -98,10 +101,10 @@ internal sealed partial class MainWindow : Window
             Run(UpdateProof);
         };
 
-        var host = new Grid { Background = Ui.Window };
+        var host = Appearance.Use(new Grid(), Panel.BackgroundProperty, "Window");
         host.RowDefinitions.Add(new() { Height = GridLength.Auto });
         host.RowDefinitions.Add(new() { Height = new GridLength(1, GridUnitType.Star) });
-        host.Children.Add(new Border { Child = Header(), BorderThickness = new Thickness(0, 0, 0, 1), BorderBrush = Ui.Edge });
+        host.Children.Add(Appearance.Use(new Border { Child = Header(), BorderThickness = new Thickness(0, 0, 0, 1) }, Border.BorderBrushProperty, "Divider"));
 
         var workspaceGrid = new Grid();
         workspaceGrid.ColumnDefinitions.Add(new() { Width = new(1, GridUnitType.Star), MinWidth = 420 });
@@ -115,7 +118,7 @@ internal sealed partial class MainWindow : Window
         proof.Children.Add(pages);
         workspaceGrid.Children.Add(proof);
 
-        var inspector = new DockPanel { Background = Ui.Panel };
+        var inspector = Appearance.Use(new DockPanel(), Panel.BackgroundProperty, "Inspector");
         var topTools = new StackPanel();
         topTools.Children.Add(InspectorStrip(viewSelector, 10));
         var secondaryModes = new Grid();
@@ -135,14 +138,15 @@ internal sealed partial class MainWindow : Window
         footer.Children.Add(status);
         var footerFrame = new Border
         {
-            Child = footer, Background = Appearance.Brush("Footer"),
-            BorderBrush = Ui.Edge, BorderThickness = new Thickness(0, 1, 0, 0),
+            Child = footer, BorderThickness = new Thickness(0, 1, 0, 0),
             Padding = new Thickness(15, 10, 14, 10)
         };
+        Appearance.Use(footerFrame, Border.BackgroundProperty, "Footer");
+        Appearance.Use(footerFrame, Border.BorderBrushProperty, "Divider");
         DockPanel.SetDock(footerFrame, Dock.Bottom);
         inspector.Children.Add(footerFrame);
 
-        tools.Margin = new Thickness(15, 0, 12, 0);
+        tools.Margin = new Thickness(15, 0, 24, 0);
         scroll = new ScrollViewer
         {
             Content = tools,
@@ -153,8 +157,9 @@ internal sealed partial class MainWindow : Window
         inspector.Children.Add(scroll);
         var inspectorFrame = new Border
         {
-            Child = inspector, BorderBrush = Ui.Edge, BorderThickness = new Thickness(1, 0, 0, 0)
+            Child = inspector, BorderThickness = new Thickness(1, 0, 0, 0)
         };
+        Appearance.Use(inspectorFrame, Border.BorderBrushProperty, "Divider");
         Grid.SetColumn(inspectorFrame, 1);
         workspaceGrid.Children.Add(inspectorFrame);
 
@@ -189,11 +194,11 @@ internal sealed partial class MainWindow : Window
 
     private Panel Header()
     {
-        var header = new Grid { MinHeight = 53, Background = Appearance.Brush("Toolbar") };
+        var header = Appearance.Use(new Grid { MinHeight = 53 }, Panel.BackgroundProperty, "Toolbar");
         header.ColumnDefinitions.Add(new() { Width = new GridLength(145) });
         header.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) });
         header.ColumnDefinitions.Add(new() { Width = new GridLength(145) });
-        var brand = Ui.Label("Cartrest", 17, Ui.Text, true);
+        var brand = Ui.Label("Cartrest", 17, strong: true);
         brand.VerticalAlignment = VerticalAlignment.Center;
         var brandRow = Ui.Row(toolbarMark, brand);
         brandRow.Margin = new Thickness(16, 0, 0, 0);
@@ -218,11 +223,11 @@ internal sealed partial class MainWindow : Window
         return header;
     }
 
-    private static Border InspectorStrip(UIElement child, double verticalPadding) => new()
+    private static Border InspectorStrip(UIElement child, double verticalPadding) => Appearance.Use(new Border
     {
         Child = child, Padding = new Thickness(14, verticalPadding, 14, verticalPadding),
-        BorderBrush = Ui.Edge, BorderThickness = new Thickness(0, 0, 0, 1)
-    };
+        BorderThickness = new Thickness(0, 0, 0, 1)
+    }, Border.BorderBrushProperty, "Divider");
 
     private static BitmapSource LoadImage(string name) =>
         BitmapFrame.Create(new Uri($"pack://application:,,,/Resources/{name}", UriKind.Absolute),
@@ -519,7 +524,7 @@ internal sealed partial class MainWindow : Window
     private void SetStatus(string message, bool error = false)
     {
         status.Text = message;
-        status.Foreground = Appearance.Brush(error ? "Error" : "Secondary");
+        Appearance.Use(status, TextBlock.ForegroundProperty, error ? "Error" : "Secondary");
         status.Visibility = string.IsNullOrWhiteSpace(message) ? Visibility.Collapsed : Visibility.Visible;
         FrameworkElementAutomationPeer.FromElement(status)?.RaiseAutomationEvent(AutomationEvents.LiveRegionChanged);
     }

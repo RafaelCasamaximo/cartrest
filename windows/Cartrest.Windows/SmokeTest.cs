@@ -56,6 +56,8 @@ internal sealed partial class MainWindow
         Require(Math.Abs(current.Settings.Label.Width - 98.16) < .001, "The trim did not follow the width.");
         Screenshot("cut");
         Appearance.Apply(Application.Current, dark: false);
+        Require(Background is SolidColorBrush lightWindow && lightWindow.Color == Appearance.Rgb(0xF4F5F0),
+            "The window did not follow the light appearance.");
         SetMode(ProofMode.Coaster);
         Width = MinWidth;
         Screenshot("coaster-light");
