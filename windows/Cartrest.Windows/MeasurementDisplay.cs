@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -61,15 +62,10 @@ internal sealed class MeasurementDisplay : Border
                 Padding = new Thickness(9, 3, 9, 3),
                 BorderBrush = Ui.Brush("#779064"),
                 BorderThickness = i == 0 ? new Thickness() : new Thickness(1, 0, 0, 0),
-                Child = new Viewbox
-                {
-                    Stretch = Stretch.Uniform,
-                    StretchDirection = StretchDirection.DownOnly,
-                    HorizontalAlignment = HorizontalAlignment.Left,
-                    VerticalAlignment = VerticalAlignment.Center,
-                    Child = cell
-                }
+                Child = cell
             };
+            int index = i;
+            readers[i].SizeChanged += (_, _) => FitReading(index);
             columns.Children.Add(readers[i]);
         }
 
@@ -93,7 +89,30 @@ internal sealed class MeasurementDisplay : Border
         {
             readers[i].Visibility = i < readings.Length ? Visibility.Visible : Visibility.Collapsed;
             if (i < readings.Length)
+            {
                 (names[i].Text, values[i].Text) = readings[i];
+                FitReading(i);
+            }
+        }
+    }
+
+    private void FitReading(int index)
+    {
+        var cell = readers[index];
+        double width = cell.ActualWidth - cell.Padding.Left - cell.Padding.Right - cell.BorderThickness.Left
+            - cell.BorderThickness.Right - 1;
+        if (width <= 0)
+            return;
+        Fit(names[index], 11.5);
+        Fit(values[index], 15);
+
+        void Fit(TextBlock text, double baseSize)
+        {
+            var face = new Typeface(text.FontFamily, text.FontStyle, text.FontWeight, text.FontStretch);
+            var layout = new FormattedText(text.Text, CultureInfo.CurrentCulture, FlowDirection.LeftToRight,
+                face, baseSize, Ink, VisualTreeHelper.GetDpi(text).PixelsPerDip);
+            double natural = layout.WidthIncludingTrailingWhitespace;
+            text.FontSize = natural > width ? Math.Max(9, baseSize * width / natural) : baseSize;
         }
     }
 

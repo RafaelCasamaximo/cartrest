@@ -12,7 +12,7 @@ internal sealed class SegmentBar<T> : Border where T : notnull
     private readonly Panel strip;
     private readonly Func<T, string> caption;
     private readonly Action<T> changed;
-    private readonly List<(T Value, RadioButton Button)> choices = [];
+    private readonly List<(T Value, RadioButton Button, double CaptionWidth)> choices = [];
     private readonly string radioGroup = Guid.NewGuid().ToString("N");
     private readonly bool console;
     private bool updating;
@@ -33,6 +33,9 @@ internal sealed class SegmentBar<T> : Border where T : notnull
 
     internal int Count => choices.Count;
 
+    internal bool CaptionsFit => choices.All(choice =>
+        choice.Button.ActualWidth >= choice.CaptionWidth + choice.Button.Padding.Left + choice.Button.Padding.Right);
+
     internal void Load(IEnumerable<T> items, T selected)
     {
         choices.Clear();
@@ -46,12 +49,15 @@ internal sealed class SegmentBar<T> : Border where T : notnull
             text.FontFamily = new System.Windows.Media.FontFamily("Segoe UI");
             text.TextWrapping = TextWrapping.NoWrap;
             text.TextTrimming = TextTrimming.CharacterEllipsis;
+            text.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
             var item = new RadioButton
             {
                 Content = text,
                 GroupName = radioGroup,
                 Padding = console ? new Thickness(14, 4, 14, 4) : new Thickness(6, 4, 6, 4),
                 MaxWidth = console ? 209 : double.PositiveInfinity,
+                // Fluent's standard radio buttons reserve 120 DIPs for their indicator and label.
+                MinWidth = 0,
                 MinHeight = 26,
                 FontSize = 13,
                 Cursor = Cursors.Hand,
@@ -63,7 +69,6 @@ internal sealed class SegmentBar<T> : Border where T : notnull
             if (layout is not null)
             {
                 // Give longer labels more room while letting the whole selector track the inspector width.
-                text.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
                 layout.ColumnDefinitions.Add(new()
                 {
                     Width = new GridLength(Math.Max(53, text.DesiredSize.Width + 25), GridUnitType.Star)
@@ -76,7 +81,7 @@ internal sealed class SegmentBar<T> : Border where T : notnull
                     changed(value);
             };
             item.PreviewKeyDown += Move;
-            choices.Add((value, item));
+            choices.Add((value, item, text.DesiredSize.Width));
             strip.Children.Add(item);
         }
         Select(selected);
@@ -85,7 +90,7 @@ internal sealed class SegmentBar<T> : Border where T : notnull
     internal void Select(T value)
     {
         updating = true;
-        foreach (var (candidate, button) in choices)
+        foreach (var (candidate, button, _) in choices)
         {
             bool selected = EqualityComparer<T>.Default.Equals(candidate, value);
             button.IsChecked = selected;

@@ -19,6 +19,7 @@ internal sealed partial class MainWindow
         Require(current.SelectedArtwork?.Name == "Mario Kart DS", "The retail artwork sample was not imported.");
         UpdateProof();
         Screenshot("coaster");
+        Require(proofModes.CaptionsFit, "Preview mode captions were clipped.");
         SetMode(ProofMode.ThreeD);
         Screenshot("cartridge-front");
         var original = orbit.Orientation;
@@ -32,6 +33,7 @@ internal sealed partial class MainWindow
         UpdateProof();
         SetDesignerPane(DesignerPane.Effects);
         Screenshot("label-designer");
+        Require(designerModes.CaptionsFit, "Designer section captions were clipped.");
         SetDesignerPane(DesignerPane.HeaderAndCode);
         Screenshot("label-header");
         SetDesignerPane(DesignerPane.Marks);
@@ -61,9 +63,11 @@ internal sealed partial class MainWindow
         SetMode(ProofMode.Coaster);
         Width = MinWidth;
         Screenshot("coaster-light");
+        Require(proofModes.CaptionsFit, "Preview captions were clipped at the minimum window width.");
         Screenshot("coaster-hidpi", 2);
         Select(workspaces.Single(w => w.Profile.Id == "switch2"));
-        LoadSample();
+        ImportSample(Directory.EnumerateFiles(SampleDirectory(), "*.png").Order().First());
+        Require(current.SelectedArtwork is not null, "The Switch 2 artwork could not be imported.");
         UpdateProof();
         Screenshot("switch2-light");
         File.WriteAllText(Path.Combine(output, "passed.txt"), "Installed Windows app verified.\n");
