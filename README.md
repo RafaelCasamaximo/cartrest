@@ -40,7 +40,11 @@ Compare the SHA-256 shown below with the value in the accompanying `.sha256` fil
 Get-FileHash .\Cartrest-1.4.0-beta.1-Windows-x64-Setup.exe -Algorithm SHA256
 ```
 
-The Windows beta includes all four stock console tabs, custom JSON profiles, a rotatable 3D proof, parametric STL export, A4 and PNG export, and the Label Designer. In **Nintendo DS → Label Designer**, choose **Load Kirby study** to open the reconstruction with the original-style stepped header and code band. [Windows build and setup guide](windows/README.md)
+The Windows beta includes all four stock console tabs, custom JSON profiles, a rotatable 3D proof, parametric STL export, A4 and PNG export, and the Label Designer. Use **Examples…** for the four retail labels included with each console. In **Nintendo DS → Label Designer**, choose **Load Kirby study** to open the reconstruction with the original-style stepped header and code band. [Windows build and setup guide](windows/README.md)
+
+| Coaster & Sheet on Windows | Kirby study in Windows Label Designer |
+| --- | --- |
+| [![Windows editor showing the Mario Kart DS label in the cartridge recess and the export buttons in the inspector.](docs/images/windows-coaster.png)](docs/images/windows-coaster.png) | [![Windows Label Designer displaying Kirby Super Star Ultra with the stepped white header and the white product code band.](docs/images/windows-label-designer.png)](docs/images/windows-label-designer.png) |
 
 ## Lay out a sticker sheet
 
