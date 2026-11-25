@@ -1,4 +1,5 @@
 using System.IO;
+using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Cartrest.Core;
@@ -10,7 +11,10 @@ internal sealed partial class MainWindow
     internal void VerifyInstalledApp(string output)
     {
         Require(workspaces.Select(w => w.Profile.Id).SequenceEqual(new[] { "ds", "3ds", "switch", "switch2" }), "The four stock profiles are missing.");
-        Require(tabs.Children.Count == 4 && current.Mode == ProofMode.Coaster, "The native console controls did not load.");
+        Require(tabs.Count == 4 && current.Mode == ProofMode.Coaster, "The native console controls did not load.");
+        Require(toolbarMark.Source is BitmapSource { PixelWidth: >= 256, PixelHeight: >= 256 },
+            "The high-resolution toolbar mark is missing.");
+        Screenshot("empty");
         LoadSample();
         Require(current.SelectedArtwork?.Name == "Mario Kart DS", "The retail artwork sample was not imported.");
         UpdateProof();
@@ -26,7 +30,13 @@ internal sealed partial class MainWindow
         LoadKirbyStudy();
         Require(current.Draft.Name == "Kirby Super Star Ultra", "The Kirby study did not load.");
         UpdateProof();
+        SetDesignerPane(DesignerPane.Effects);
         Screenshot("label-designer");
+        SetDesignerPane(DesignerPane.HeaderAndCode);
+        Screenshot("label-header");
+        SetDesignerPane(DesignerPane.Marks);
+        Require(designerPane == DesignerPane.Marks && current.Draft.Code == "NTR-YKWE-USA", "Switching designer sections lost the label.");
+        SetDesignerPane(DesignerPane.Artwork);
         Require(catalog.Asset("studio-nintendo-outline") is not null && catalog.Asset("studio-hal-inutamago") is not null,
             "The Kirby marks were not bundled.");
         using (var label = LabelRenderer.Render(current.Draft, catalog, current.Settings))
@@ -45,15 +55,24 @@ internal sealed partial class MainWindow
         SetMode(ProofMode.Cut);
         Require(Math.Abs(current.Settings.Label.Width - 98.16) < .001, "The trim did not follow the width.");
         Screenshot("cut");
+        Appearance.Apply(Application.Current, dark: false);
+        SetMode(ProofMode.Coaster);
+        Width = MinWidth;
+        Screenshot("coaster-light");
+        Screenshot("coaster-hidpi", 2);
+        Select(workspaces.Single(w => w.Profile.Id == "switch2"));
+        LoadSample();
+        UpdateProof();
+        Screenshot("switch2-light");
         File.WriteAllText(Path.Combine(output, "passed.txt"), "Installed Windows app verified.\n");
 
-        void Screenshot(string name)
+        void Screenshot(string name, int density = 1)
         {
             UpdateLayout();
             var source = (Visual)Content;
             int width = (int)((System.Windows.FrameworkElement)Content).ActualWidth;
             int height = (int)((System.Windows.FrameworkElement)Content).ActualHeight;
-            var screenshot = new RenderTargetBitmap(width, height, 96, 96, PixelFormats.Pbgra32);
+            var screenshot = new RenderTargetBitmap(width * density, height * density, 96 * density, 96 * density, PixelFormats.Pbgra32);
             screenshot.Render(source);
             WriteFile(Path.Combine(output, $"{name}.png"), stream =>
             {

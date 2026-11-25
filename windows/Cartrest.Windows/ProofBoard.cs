@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -12,12 +13,16 @@ internal sealed class ProofBoard : FrameworkElement
     private Pen fine = new(Ui.Edge, 1);
     private Pen major = new(Ui.Edge, 1);
     private BitmapSource? image;
-    private Brush ornament = Ui.Secondary;
-    public bool Paper { get; set; }
+    private double physicalWidth = 100;
+    private bool paper;
+    private bool pageControls;
 
-    public void Update(Palette palette, BitmapSource? proof)
+    public void Update(Palette palette, BitmapSource? proof, double width, bool paper, bool pageControls)
     {
         image = proof;
+        physicalWidth = width;
+        this.paper = paper;
+        this.pageControls = pageControls;
         var colors = new[] { palette.Mat.Highlight, palette.Mat.Center, palette.Mat.Shadow };
         var stops = new GradientStopCollection();
         for (int i = 0; i < colors.Length; i++)
@@ -38,9 +43,8 @@ internal sealed class ProofBoard : FrameworkElement
         mat = new LinearGradientBrush(stops, start, end);
         byte opacity = (byte)Math.Round(255 * palette.Mat.GridOpacity);
         var color = SKColor.Parse(palette.Grid);
-        fine = new(new SolidColorBrush(Color.FromArgb((byte)(opacity * 0.12), color.Red, color.Green, color.Blue)), 1);
-        major = new(new SolidColorBrush(Color.FromArgb((byte)(opacity * 0.23), color.Red, color.Green, color.Blue)), 1);
-        ornament = new SolidColorBrush(Color.FromArgb((byte)(opacity * 0.64), color.Red, color.Green, color.Blue));
+        fine = new(new SolidColorBrush(Color.FromArgb((byte)(opacity * 0.10), color.Red, color.Green, color.Blue)), .65);
+        major = new(new SolidColorBrush(Color.FromArgb((byte)(opacity * 0.17), color.Red, color.Green, color.Blue)), .75);
         InvalidateVisual();
     }
 
@@ -55,49 +59,92 @@ internal sealed class ProofBoard : FrameworkElement
         var viewport = new Rect(RenderSize);
         if (viewport.Width <= 0 || viewport.Height <= 0)
             return;
-        dc.PushClip(new RectangleGeometry(viewport, 11, 11));
         dc.DrawRectangle(mat, null, viewport);
-        const double inset = 19;
-        const double grid = 19;
-        if (viewport.Width > inset * 2 && viewport.Height > inset * 2)
-        {
-            var inner = new Rect(inset, inset, viewport.Width - 2 * inset, viewport.Height - 2 * inset);
-            dc.DrawRectangle(null, major, inner);
-            for (int i = 1; i * grid < inner.Width; i++)
-            {
-                double x = inset + i * grid;
-                dc.DrawLine(i % 5 == 0 ? major : fine, new(x, inset), new(x, inner.Bottom));
-                if (i % 5 == 0)
-                    dc.DrawLine(major, new(x, 10), new(x, inset));
-            }
-            for (int i = 1; i * grid < inner.Height; i++)
-            {
-                double y = inset + i * grid;
-                dc.DrawLine(i % 5 == 0 ? major : fine, new(inset, y), new(inner.Right, y));
-                if (i % 5 == 0)
-                    dc.DrawLine(major, new(10, y), new(inset, y));
-            }
-            foreach (var p in new[] { inner.TopLeft, inner.TopRight, inner.BottomLeft, inner.BottomRight })
-                dc.DrawEllipse(ornament, null, p, 2, 2);
-        }
+        var bounds = FitProof(viewport);
+        double ratio = bounds.IsEmpty
+            ? Math.Min(viewport.Width, viewport.Height) * .68 / physicalWidth
+            : bounds.Width / physicalWidth;
+        if (!double.IsFinite(ratio) || ratio <= 0)
+            return;
 
-        if (image is not null)
+        var origin = bounds.IsEmpty ? new Point(viewport.Width / 2, viewport.Height / 2) : bounds.TopLeft;
+        DrawGrid(origin.X, viewport.Width, x => (new Point(x, 0), new Point(x, viewport.Height)));
+        DrawGrid(origin.Y, viewport.Height, y => (new Point(0, y), new Point(viewport.Width, y)));
+        if (image is not null && !bounds.IsEmpty)
+            dc.DrawImage(image, bounds);
+
+        void DrawGrid(double offset, double length, Func<double, (Point, Point)> endpoints)
         {
-            const double roomForMeter = 60;
-            double scale = Math.Min(Math.Max(0, viewport.Width - 125) / image.PixelWidth,
-                Math.Max(0, viewport.Height - roomForMeter - 48) / image.PixelHeight);
-            scale = Math.Min(scale, Paper ? 0.94 : 0.84);
-            double width = image.PixelWidth * scale;
-            double height = image.PixelHeight * scale;
-            if (scale > 0)
-                dc.DrawImage(image, new((viewport.Width - width) / 2, (viewport.Height - height - roomForMeter) / 2, width, height));
+            // The mat is measured in millimeters, including when the coaster size changes.
+            double step = ratio * 5;
+            int every = 4;
+            if (step < 4)
+            {
+                step *= every;
+                every = 1;
+            }
+            if (step < 4)
+                return;
+            int first = (int)Math.Ceiling(-offset / step);
+            int last = (int)Math.Floor((length - offset) / step);
+            for (int index = first; index <= last; index++)
+            {
+                var (start, end) = endpoints(offset + index * step);
+                dc.DrawLine(index % every == 0 ? major : fine, start, end);
+            }
         }
-        dc.Pop();
     }
+
+    private Rect FitProof(Rect viewport)
+    {
+        if (image is null)
+            return Rect.Empty;
+
+        const double top = 17;
+        var height = viewport.Height - MeasurementDisplay.PreviewClearance - (pageControls ? 27 : 0) - top;
+        var width = viewport.Width - (paper ? 80 : 52);
+        if (height <= 0 || width <= 0)
+            return Rect.Empty;
+
+        double scale = Math.Min(width / image.PixelWidth, height / image.PixelHeight);
+        width = image.PixelWidth * scale;
+        var scaledHeight = image.PixelHeight * scale;
+        return new Rect((viewport.Width - width) / 2, top + (height - scaledHeight) / 2, width, scaledHeight);
+    }
+
 }
 
 internal static class ProofRenderer
 {
+    internal const double CoasterPadding = 10;
+    internal const double CutPadding = 7;
+    private static readonly ConditionalWeakTable<SKBitmap, BitmapSource> Thumbnails = new();
+    private static readonly SKSamplingOptions Smooth = new(SKFilterMode.Linear, SKMipmapMode.Linear);
+
+    internal static BitmapSource Thumbnail(Artwork art) => Thumbnails.GetValue(art.Bitmap, original =>
+    {
+        using var thumbnail = new SKBitmap(new SKImageInfo(96, 96, SKColorType.Bgra8888, SKAlphaType.Premul));
+        using var canvas = new SKCanvas(thumbnail);
+        using var picture = SKImage.FromBitmap(original);
+        canvas.Clear(SKColors.Transparent);
+        canvas.DrawImage(picture, PrintLayout.Crop(original, SKRect.Create(96, 96)), Smooth);
+        return BitmapSource(thumbnail);
+    });
+
+    internal static BitmapSource RenderDesign(SKBitmap label, PrintSettings settings)
+    {
+        using var canvas = new SKCanvas(label);
+        canvas.Scale(label.Width / (float)settings.Width, label.Height / (float)settings.Height);
+        using var trim = Outline.Path(Outline.ForRegion(settings.TrimRegion));
+        canvas.Save();
+        canvas.ClipPath(trim, SKClipOperation.Difference, antialias: true);
+        using var bleed = new SKPaint { Color = new(35, 71, 58, 110), IsAntialias = true };
+        canvas.DrawRect(SKRect.Create((float)settings.Width, (float)settings.Height), bleed);
+        canvas.Restore();
+        DrawTrim(canvas, trim);
+        return BitmapSource(label);
+    }
+
     public static BitmapSource BitmapSource(SKBitmap bitmap)
     {
         var source = System.Windows.Media.Imaging.BitmapSource.Create(bitmap.Width, bitmap.Height, 96, 96,
@@ -113,18 +160,17 @@ internal static class ProofRenderer
         var palette = profile.Palette;
         var body = geometry.Body;
         double factor = profile.Scale(workspace.Width);
-        const double pad = 15;
-        var (bitmap, canvas) = Picture((body.Width + 2 * pad) * factor, (body.Height + 2 * pad) * factor);
+        var (bitmap, canvas) = Picture((body.Width + 2 * CoasterPadding) * factor, (body.Height + 2 * CoasterPadding) * factor);
         using (bitmap)
         using (canvas)
         {
-            canvas.Translate((float)(pad * factor), (float)(pad * factor));
+            canvas.Translate((float)(CoasterPadding * factor), (float)(CoasterPadding * factor));
             canvas.Scale((float)factor);
             using var shape = Outline.Path(Outline.ForBody(body));
-            using var blur = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, 5);
+            using var blur = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, 3.4f);
             using var shadow = new SKPaint { Color = new(4, 10, 8, 175), IsAntialias = true, MaskFilter = blur };
             canvas.Save();
-            canvas.Translate(0, 5);
+            canvas.Translate(0, 4);
             canvas.DrawPath(shape, shadow);
             canvas.Restore();
             using var shell = SKShader.CreateLinearGradient(new(0, 0), new((float)body.Width, (float)body.Height),
@@ -141,6 +187,15 @@ internal static class ProofRenderer
             paint.Style = SKPaintStyle.Fill;
             paint.Color = SKColor.Parse(palette.Recess);
             canvas.DrawPath(recess, paint);
+            using var bevel = SKShader.CreateLinearGradient(
+                new(0, (float)geometry.Recess.Y),
+                new(0, (float)(geometry.Recess.Y + geometry.Recess.Height)),
+                [new SKColor(0, 0, 0, 155), new SKColor(255, 255, 255, 81)], null, SKShaderTileMode.Clamp);
+            using var rim = new SKPaint
+            {
+                IsAntialias = true, Style = SKPaintStyle.Stroke, StrokeWidth = .55f, Shader = bevel
+            };
+            canvas.DrawPath(recess, rim);
             if (geometry.Grip is { } grip)
             {
                 using var path = Outline.Path(Outline.ForRegion(grip));
@@ -150,6 +205,7 @@ internal static class ProofRenderer
             {
                 using var path = Outline.Path(Outline.ForArrow(arrow));
                 canvas.DrawPath(path, paint);
+                canvas.DrawPath(path, rim);
             }
             if (art is not null)
             {
@@ -169,12 +225,11 @@ internal static class ProofRenderer
 
     public static BitmapSource RenderCut(PrintSettings settings, Artwork? art)
     {
-        const double pad = 6;
-        var (bitmap, canvas) = Picture(settings.Width + pad * 2, settings.Height + pad * 2);
+        var (bitmap, canvas) = Picture(settings.Width + CutPadding * 2, settings.Height + CutPadding * 2);
         using (bitmap)
         using (canvas)
         {
-            canvas.Translate((float)pad, (float)pad);
+            canvas.Translate((float)CutPadding, (float)CutPadding);
             var rect = new SKRect(0, 0, (float)settings.Width, (float)settings.Height);
             if (art is not null)
                 PrintLayout.DrawArtwork(canvas, art, rect);
@@ -184,15 +239,24 @@ internal static class ProofRenderer
                 canvas.DrawRect(rect, paper);
             }
             using var trim = Outline.Path(Outline.ForRegion(settings.TrimRegion));
-            using var dash = SKPathEffect.CreateDash([1.7f, 1.0f], 0);
-            using var ink = new SKPaint { Color = SKColors.White, IsAntialias = true, Style = SKPaintStyle.Stroke, StrokeWidth = .9f };
-            canvas.DrawPath(trim, ink);
-            ink.Color = new(21, 36, 30);
-            ink.StrokeWidth = .45f;
-            ink.PathEffect = dash;
-            canvas.DrawPath(trim, ink);
+            DrawTrim(canvas, trim);
             return BitmapSource(bitmap);
         }
+    }
+
+    private static void DrawTrim(SKCanvas canvas, SKPath trim)
+    {
+        using var dash = SKPathEffect.CreateDash([1.4f, 0.9f], 0);
+        using var ink = new SKPaint
+        {
+            Color = new SKColor(255, 255, 255, 219),
+            IsAntialias = true, Style = SKPaintStyle.Stroke, StrokeWidth = .46f
+        };
+        canvas.DrawPath(trim, ink);
+        ink.Color = new(38, 50, 43, 207);
+        ink.StrokeWidth = .28f;
+        ink.PathEffect = dash;
+        canvas.DrawPath(trim, ink);
     }
 
     public static BitmapSource RenderSheet(PrintSettings settings, IReadOnlyList<Artwork> artwork, Placement[][] pages, int page)
@@ -209,7 +273,7 @@ internal static class ProofRenderer
 
     private static (SKBitmap Bitmap, SKCanvas Canvas) Picture(double width, double height)
     {
-        double scale = 860 / Math.Max(width, height);
+        double scale = 1440 / Math.Max(width, height);
         var bitmap = new SKBitmap(new SKImageInfo(PrintLayout.Pixels(width * scale), PrintLayout.Pixels(height * scale), SKColorType.Bgra8888, SKAlphaType.Premul));
         var canvas = new SKCanvas(bitmap);
         canvas.Clear(SKColors.Transparent);

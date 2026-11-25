@@ -108,7 +108,7 @@ def main():
 
     with setup.open("rb") as source:
         digest = hashlib.file_digest(source, "sha256").hexdigest()
-    setup.with_suffix(".exe.sha256").write_text(f"{digest}  {name}\n", encoding="ascii")
+    setup.with_suffix(".exe.sha256").write_text(f"{digest}  {name}\n", encoding="ascii", newline="\n")
     print(setup)
 
 

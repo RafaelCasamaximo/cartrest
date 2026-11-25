@@ -6,6 +6,7 @@
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <AssemblyName>Cartrest</AssemblyName>
     <StartupObject>Cartrest.Windows.Program</StartupObject>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>../installer/Cartrest.ico</ApplicationIcon>
     <UseRidGraph>false</UseRidGraph>
   </PropertyGroup>
@@ -19,6 +20,7 @@
   <ItemGroup>
     <ProjectReference Include="../Cartrest.Core/Cartrest.Core.csproj" />
     <Resource Include="../installer/Cartrest.ico" Link="Resources/Cartrest.ico" />
+    <Resource Include="../../design/icon/Cartrest-Liquid-Glass.png" Link="Resources/Cartrest-Mark.png" />
 
     <Content Include="../../consoles/*.json" Link="Resources/Consoles/%(Filename)%(Extension)" />
     <Content Include="../../design/labels/catalog.json" Link="Resources/Labels/catalog.json" />

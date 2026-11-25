@@ -11,14 +11,14 @@ namespace Cartrest.Windows;
 
 internal static class Ui
 {
-    internal static readonly Brush Window = Brush("#111916");
-    internal static readonly Brush Panel = Brush("#17211D");
-    internal static readonly Brush Input = Brush("#202D27");
-    internal static readonly Brush Edge = Brush("#35473D");
-    internal static readonly Brush Text = Brush("#EDF5EE");
-    internal static readonly Brush Secondary = Brush("#B8CEC0");
-    internal static readonly Brush Accent = Brush("#B4E3BA");
-    internal static readonly Brush AccentText = Brush("#183025");
+    internal static Brush Window => Appearance.Brush("Window");
+    internal static Brush Panel => Appearance.Brush("Inspector");
+    internal static Brush Input => Appearance.Brush("Control");
+    internal static Brush Edge => Appearance.Brush("Divider");
+    internal static Brush Text => Appearance.Brush("Text");
+    internal static Brush Secondary => Appearance.Brush("Secondary");
+    internal static Brush Accent => Appearance.Brush("Accent");
+    internal static Brush AccentText => Appearance.Brush("AccentText");
 
     internal static SolidColorBrush Brush(string hex)
     {
@@ -38,60 +38,95 @@ internal static class Ui
         TextWrapping = TextWrapping.Wrap
     };
 
-    internal static Button Button(string caption, Action action, bool prominent = false, bool active = false)
+    internal static Button Button(string caption, Action action, bool prominent = false)
     {
         var button = new Button
         {
             Content = caption,
-            Padding = new Thickness(13, 7, 13, 7),
-            MinHeight = 32,
-            Margin = new Thickness(0, 0, 6, 0),
+            Padding = new Thickness(12, 4, 12, 5),
+            MinHeight = 28,
+            Margin = new Thickness(0, 0, 7, 0),
             Cursor = Cursors.Hand,
             FontSize = 13,
-            FontWeight = prominent || active ? FontWeights.SemiBold : FontWeights.Normal,
-            Foreground = prominent || active ? AccentText : Text,
-            Background = prominent || active ? Accent : Input,
-            BorderBrush = prominent || active ? Accent : Edge,
-            BorderThickness = new Thickness(1),
-            Template = ButtonTemplate()
+            FontWeight = FontWeights.Medium,
+            Foreground = prominent ? Appearance.Brush("AccentInk") : Text,
+            Background = prominent ? Accent : Input,
+            Template = (ControlTemplate)ControlStyles.Value["Action"]
         };
         button.Click += (_, _) => action();
         return button;
     }
 
-    private static ControlTemplate? buttonTemplate;
-    private static ControlTemplate ButtonTemplate()
+    internal static Button IconButton(string glyph, string name, Action action)
     {
-        if (buttonTemplate is not null)
-            return buttonTemplate;
-        var outline = new FrameworkElementFactory(typeof(Border)) { Name = "Outline" };
-        outline.SetValue(Border.CornerRadiusProperty, new CornerRadius(7));
-        outline.SetBinding(Border.BackgroundProperty, new System.Windows.Data.Binding(nameof(Control.Background)) { RelativeSource = System.Windows.Data.RelativeSource.TemplatedParent });
-        outline.SetBinding(Border.BorderBrushProperty, new System.Windows.Data.Binding(nameof(Control.BorderBrush)) { RelativeSource = System.Windows.Data.RelativeSource.TemplatedParent });
-        outline.SetBinding(Border.BorderThicknessProperty, new System.Windows.Data.Binding(nameof(Control.BorderThickness)) { RelativeSource = System.Windows.Data.RelativeSource.TemplatedParent });
-        outline.SetBinding(Border.PaddingProperty, new System.Windows.Data.Binding(nameof(Control.Padding)) { RelativeSource = System.Windows.Data.RelativeSource.TemplatedParent });
-        var content = new FrameworkElementFactory(typeof(ContentPresenter));
-        content.SetValue(FrameworkElement.HorizontalAlignmentProperty, HorizontalAlignment.Center);
-        content.SetValue(FrameworkElement.VerticalAlignmentProperty, VerticalAlignment.Center);
-        outline.AppendChild(content);
-        var template = new ControlTemplate(typeof(Button)) { VisualTree = outline };
-        var focus = new Trigger { Property = UIElement.IsKeyboardFocusedProperty, Value = true };
-        focus.Setters.Add(new Setter(Border.BorderBrushProperty, Brush("#FFFFFF"), "Outline"));
-        var hover = new Trigger { Property = UIElement.IsMouseOverProperty, Value = true };
-        hover.Setters.Add(new Setter(UIElement.OpacityProperty, 0.87, "Outline"));
-        var disabled = new Trigger { Property = UIElement.IsEnabledProperty, Value = false };
-        disabled.Setters.Add(new Setter(UIElement.OpacityProperty, 0.46, "Outline"));
-        template.Triggers.Add(hover);
-        template.Triggers.Add(focus);
-        template.Triggers.Add(disabled);
-        buttonTemplate = template;
-        return template;
+        var button = Button("", action);
+        button.Content = new TextBlock
+        {
+            Text = glyph, FontFamily = new FontFamily("Segoe Fluent Icons"), FontSize = 14
+        };
+        button.MinWidth = 28;
+        button.Padding = new Thickness(6, 4, 6, 4);
+        AutomationProperties.SetName(button, name);
+        button.ToolTip = name;
+        return button;
     }
 
     // Define native Track parts in markup so WPF wires drag, paging and keyboard commands.
-    private static readonly Lazy<ResourceDictionary> TrackStyles = new(() => (ResourceDictionary)XamlReader.Parse("""
+    private static readonly Lazy<ResourceDictionary> ControlStyles = new(() => (ResourceDictionary)XamlReader.Parse("""
         <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+          <ControlTemplate x:Key="Action" TargetType="Button">
+            <Border x:Name="Surface" CornerRadius="7" Background="{TemplateBinding Background}"
+                    BorderBrush="Transparent" BorderThickness="1" Padding="{TemplateBinding Padding}">
+              <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Surface" Property="Opacity" Value=".82" /></Trigger>
+              <Trigger Property="IsPressed" Value="True"><Setter TargetName="Surface" Property="Opacity" Value=".68" /></Trigger>
+              <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Surface" Property="BorderBrush" Value="{DynamicResource Cartrest.Focus}" /></Trigger>
+              <Trigger Property="IsEnabled" Value="False"><Setter TargetName="Surface" Property="Opacity" Value=".5" /></Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+          <ControlTemplate x:Key="Segment" TargetType="RadioButton">
+            <Grid>
+              <Border x:Name="Surface" CornerRadius="6" BorderThickness="1" BorderBrush="Transparent"
+                      Background="Transparent" Padding="{TemplateBinding Padding}">
+                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+              </Border>
+              <Border x:Name="Active" Height="2" Width="12" VerticalAlignment="Bottom" Margin="0,0,0,1"
+                      Background="{DynamicResource Cartrest.Focus}" CornerRadius="1" Visibility="Collapsed" />
+            </Grid>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Surface" Property="Background" Value="{DynamicResource Cartrest.Hovered}" /></Trigger>
+              <Trigger Property="IsChecked" Value="True">
+                <Setter TargetName="Surface" Property="Background" Value="{Binding Background, RelativeSource={RelativeSource TemplatedParent}}" />
+                <Setter TargetName="Active" Property="Visibility" Value="Visible" />
+              </Trigger>
+              <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Surface" Property="BorderBrush" Value="{DynamicResource Cartrest.Focus}" /></Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+          <Style x:Key="ArtworkItem" TargetType="ListBoxItem">
+            <Setter Property="Margin" Value="0,0,0,5" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Template">
+              <Setter.Value>
+                <ControlTemplate TargetType="ListBoxItem">
+                  <Border x:Name="Surface" Background="Transparent" CornerRadius="8" Padding="6"
+                          BorderThickness="1" BorderBrush="{DynamicResource Cartrest.Divider}">
+                    <ContentPresenter />
+                  </Border>
+                  <ControlTemplate.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Surface" Property="Background" Value="{DynamicResource Cartrest.Hovered}" /></Trigger>
+                    <Trigger Property="IsSelected" Value="True">
+                      <Setter TargetName="Surface" Property="Background" Value="{DynamicResource Cartrest.Selection}" />
+                      <Setter TargetName="Surface" Property="BorderBrush" Value="{DynamicResource Cartrest.SelectionEdge}" />
+                    </Trigger>
+                    <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Surface" Property="BorderBrush" Value="{DynamicResource Cartrest.Focus}" /></Trigger>
+                  </ControlTemplate.Triggers>
+                </ControlTemplate>
+              </Setter.Value>
+            </Setter>
+          </Style>
           <Style x:Key="TrackButton" TargetType="RepeatButton">
             <Setter Property="Focusable" Value="False" />
             <Setter Property="ClickMode" Value="Press" />
@@ -105,7 +140,7 @@ internal static class Ui
           </Style>
           <ControlTemplate x:Key="SliderTrack" TargetType="Slider">
             <Grid Background="Transparent">
-              <Border x:Name="Line" Height="4" VerticalAlignment="Center" Background="#35473D" CornerRadius="2" />
+              <Border x:Name="Line" Height="4" VerticalAlignment="Center" Background="{DynamicResource Cartrest.Track}" CornerRadius="2" />
               <Track x:Name="PART_Track">
                 <Track.DecreaseRepeatButton>
                   <RepeatButton Style="{StaticResource TrackButton}" Command="{x:Static Slider.DecreaseLarge}" />
@@ -114,7 +149,7 @@ internal static class Ui
                   <Thumb Width="13" Height="13" VerticalAlignment="Center">
                     <Thumb.Template>
                       <ControlTemplate TargetType="Thumb">
-                        <Border Background="#B4E3BA" BorderBrush="#183025" BorderThickness="1" CornerRadius="7" />
+                        <Border Background="{DynamicResource Cartrest.Thumb}" BorderBrush="{DynamicResource Cartrest.FieldEdge}" BorderThickness="1" CornerRadius="7" />
                       </ControlTemplate>
                     </Thumb.Template>
                   </Thumb>
@@ -126,7 +161,7 @@ internal static class Ui
             </Grid>
             <ControlTemplate.Triggers>
               <Trigger Property="IsKeyboardFocused" Value="True">
-                <Setter TargetName="Line" Property="Background" Value="#B8CEC0" />
+                <Setter TargetName="Line" Property="Background" Value="{DynamicResource Cartrest.Focus}" />
               </Trigger>
             </ControlTemplate.Triggers>
           </ControlTemplate>
@@ -135,7 +170,7 @@ internal static class Ui
             <Setter Property="Template">
               <Setter.Value>
                 <ControlTemplate TargetType="ScrollBar">
-                  <Border Padding="2,0" Background="#17211D">
+                  <Border Padding="2,0" Background="Transparent">
                     <Track x:Name="PART_Track" Orientation="Vertical" IsDirectionReversed="True">
                       <Track.DecreaseRepeatButton>
                         <RepeatButton Style="{StaticResource TrackButton}" Command="{x:Static ScrollBar.PageUpCommand}" />
@@ -144,7 +179,7 @@ internal static class Ui
                         <Thumb>
                           <Thumb.Template>
                             <ControlTemplate TargetType="Thumb">
-                              <Border Background="#688277" CornerRadius="4" />
+                              <Border Background="{DynamicResource Cartrest.Scroller}" CornerRadius="4" />
                             </ControlTemplate>
                           </Thumb.Template>
                         </Thumb>
@@ -161,9 +196,13 @@ internal static class Ui
         </ResourceDictionary>
         """));
 
-    private static ControlTemplate SliderTemplate() => (ControlTemplate)TrackStyles.Value["SliderTrack"];
+    private static ControlTemplate SliderTemplate() => (ControlTemplate)ControlStyles.Value["SliderTrack"];
 
-    internal static Style ScrollbarStyle() => (Style)TrackStyles.Value["VerticalScroller"];
+    internal static Style ArtworkItemStyle() => (Style)ControlStyles.Value["ArtworkItem"];
+
+    internal static ControlTemplate SegmentTemplate() => (ControlTemplate)ControlStyles.Value["Segment"];
+
+    internal static Style ScrollbarStyle() => (Style)ControlStyles.Value["VerticalScroller"];
 
     internal static StackPanel Row(params UIElement[] children)
     {
@@ -173,21 +212,34 @@ internal static class Ui
         return row;
     }
 
-    internal static StackPanel Section(Panel parent, string caption)
+    internal static WrapPanel Actions(params UIElement[] children)
+    {
+        var row = new WrapPanel();
+        foreach (var child in children)
+            row.Children.Add(child);
+        return row;
+    }
+
+    internal static StackPanel Section(Panel parent, string caption, FrameworkElement? accessory = null)
     {
         var content = new StackPanel();
-        var header = Label(caption, 13, Accent, true);
-        header.Margin = new Thickness(0, 0, 0, 8);
-        content.Children.Add(header);
+        var heading = new DockPanel { Margin = new Thickness(0, 0, 0, 9) };
+        var title = Label(caption, 14, Text, true);
+        title.VerticalAlignment = VerticalAlignment.Center;
+        AutomationProperties.SetHeadingLevel(title, AutomationHeadingLevel.Level2);
+        if (accessory is not null)
+        {
+            DockPanel.SetDock(accessory, Dock.Right);
+            heading.Children.Add(accessory);
+        }
+        heading.Children.Add(title);
+        content.Children.Add(heading);
         parent.Children.Add(new Border
         {
-            Padding = new Thickness(12, 10, 12, 12),
-            Margin = new Thickness(0, 0, 0, 10),
+            Padding = new Thickness(0, 13, 0, 13),
             Child = content,
-            CornerRadius = new CornerRadius(9),
-            Background = Window,
             BorderBrush = Edge,
-            BorderThickness = new Thickness(1)
+            BorderThickness = new Thickness(0, parent.Children.Count > 0 ? 1 : 0, 0, 0)
         });
         return content;
     }
@@ -204,13 +256,13 @@ internal static class Ui
         {
             Text = value,
             MaxLength = maxLength,
-            Padding = new Thickness(7, 4, 7, 4),
+            Padding = new Thickness(8, 4, 8, 4),
             FontSize = 13,
-            MinHeight = 29,
-            Background = Input,
+            MinHeight = 28,
+            Background = Appearance.Brush("Field"),
             Foreground = Text,
             CaretBrush = Text,
-            BorderBrush = Edge
+            BorderBrush = Appearance.Brush("FieldEdge")
         };
         AutomationProperties.SetName(entry, name);
         return entry;
@@ -218,39 +270,52 @@ internal static class Ui
 
     internal static void TextField(Panel container, string name, string value, Action<string> changed)
     {
-        Add(container, Label(name, 12, Secondary), 3);
+        Add(container, Label(name, 13, Text), 4);
         var entry = Entry(name, value);
         entry.TextChanged += (_, _) => changed(entry.Text);
         Add(container, entry);
     }
 
     internal static void Number(Panel container, string name, double value, double min, double max, Action<double> changed,
-        bool slider = true, bool whole = false)
+        bool slider = true, bool whole = false, string? unit = null)
     {
         var row = new DockPanel { LastChildFill = true };
-        var entry = Entry(name, Format(value), 15);
-        entry.Width = 69;
+        string accessibleName = unit is null ? name : $"{name} ({unit})";
+        var entry = Entry(accessibleName, Format(value), 15);
+        entry.Width = slider ? 59 : 79;
+        entry.TextAlignment = TextAlignment.Right;
         entry.Margin = new Thickness(8, 0, 0, 0);
-        var label = Label(name, 12, Secondary);
+        var label = Label(name, 13, Text);
         label.VerticalAlignment = VerticalAlignment.Center;
+        if (unit is not null)
+        {
+            var suffix = Label(unit, 11, Secondary);
+            suffix.MinWidth = 14;
+            suffix.Margin = new Thickness(4, 0, 0, 0);
+            suffix.VerticalAlignment = VerticalAlignment.Center;
+            DockPanel.SetDock(suffix, Dock.Right);
+            row.Children.Add(suffix);
+        }
         DockPanel.SetDock(entry, Dock.Right);
         row.Children.Add(entry);
+        DockPanel.SetDock(label, Dock.Left);
         row.Children.Add(label);
 
         Slider? track = null;
         bool updating = false;
         if (slider)
         {
+            label.Width = 112;
             track = new Slider
             {
                 Minimum = min, Maximum = max, Value = value,
                 SmallChange = whole ? 1 : (max - min) / 100,
-                LargeChange = Math.Max(1, (max - min) / 10),
+                LargeChange = (max - min) / 10,
                 IsSnapToTickEnabled = whole, TickFrequency = 1,
-                Foreground = Accent, Margin = new Thickness(0, 1, 0, 4),
-                Height = 19, Template = SliderTemplate()
+                Template = SliderTemplate(), Height = 24, VerticalAlignment = VerticalAlignment.Center
             };
-            AutomationProperties.SetName(track, name);
+            AutomationProperties.SetName(track, accessibleName);
+            row.Children.Add(track);
             track.ValueChanged += (_, _) =>
             {
                 if (updating)
@@ -289,12 +354,10 @@ internal static class Ui
         entry.TextChanged += (_, _) =>
         {
             bool valid = TryNumber(entry.Text, out var x) && x >= min && x <= max;
-            entry.BorderBrush = valid ? Edge : Brush("#F7A28D");
+            entry.BorderBrush = Appearance.Brush(valid ? "FieldEdge" : "Error");
             entry.ToolTip = valid ? null : $"Enter a number from {Format(min)} to {Format(max)}.";
         };
-        Add(container, row, track is null ? 6 : 1);
-        if (track is not null)
-            Add(container, track, 4);
+        Add(container, row, 5);
     }
 
     internal static void ColorField(Panel container, string name, SKColor color, Action<SKColor> changed)
@@ -316,12 +379,12 @@ internal static class Ui
             if (entry.Text is { Length: 7 } && entry.Text.StartsWith('#') && SKColor.TryParse(entry.Text, out var result))
             {
                 swatch.Background = new SolidColorBrush(ColorFrom(result));
-                entry.BorderBrush = Edge;
+                entry.BorderBrush = Appearance.Brush("FieldEdge");
                 changed(result);
             }
             else
             {
-                entry.BorderBrush = Brush("#F7A28D");
+                entry.BorderBrush = Appearance.Brush("Error");
             }
         };
         Add(container, row);
@@ -329,15 +392,15 @@ internal static class Ui
 
     internal static ComboBox Choice<T>(Panel container, string name, IEnumerable<T> options, T selected, Action<T> changed)
     {
-        Add(container, Label(name, 12, Secondary), 3);
+        Add(container, Label(name, 13, Text), 4);
         var picker = new ComboBox
         {
             ItemsSource = options,
             SelectedItem = selected,
-            Foreground = AccentText,
+            Foreground = Text,
             Background = Input,
             MinHeight = 29,
-            Padding = new Thickness(5, 2, 5, 2)
+            Padding = new Thickness(8, 3, 8, 3)
         };
         AutomationProperties.SetName(picker, name);
         picker.SelectionChanged += (_, _) =>

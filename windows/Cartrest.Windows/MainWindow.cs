@@ -2,6 +2,7 @@ using System.IO;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Automation;
+using System.Windows.Automation.Peers;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
@@ -16,24 +17,37 @@ namespace Cartrest.Windows;
 
 internal sealed partial class MainWindow : Window
 {
+    private enum DesignerPane { Artwork, Effects, HeaderAndCode, Marks }
+
     private const string ImageFilter = "Image files (*.png;*.jpg;*.jpeg;*.webp;*.bmp;*.gif)|*.png;*.jpg;*.jpeg;*.webp;*.bmp;*.gif|All files (*.*)|*.*";
     private static readonly string ResourcesDirectory = Path.Combine(AppContext.BaseDirectory, "Resources");
     private readonly string profilesDirectory;
     private readonly LabelCatalog catalog;
     private readonly List<Workspace> workspaces = [];
-    private readonly WrapPanel tabs = new() { Margin = new Thickness(17, 0, 14, 0) };
+    private readonly SegmentBar<Workspace> tabs;
+    private readonly SegmentBar<bool> viewSelector;
+    private readonly SegmentBar<ProofMode> proofModes;
+    private readonly SegmentBar<DesignerPane> designerModes;
     private readonly Grid proof = new() { ClipToBounds = true };
     private readonly ProofBoard mat = new();
     private readonly OrbitView orbit = new() { Visibility = Visibility.Collapsed };
     private readonly StackPanel tools = new();
-    private readonly StackPanel exportBar = new() { Margin = new Thickness(0, 9, 0, 3) };
+    private readonly StackPanel exportBar = new();
     private readonly ScrollViewer scroll;
-    private readonly StackPanel viewSelector = new() { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Center };
-    private readonly WrapPanel modes = new() { HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 0, 0, 9) };
-    private readonly TextBlock measurement = Ui.Label("", 14, Ui.Accent, true);
-    private readonly TextBlock measureDetail = Ui.Label("", 12, Ui.Secondary);
+    private readonly MeasurementDisplay display = new();
+    private readonly TextBlock printSummary = Ui.Label("", 12, Ui.AccentText, true);
+    private readonly TextBlock pixelSummary = Ui.Label("", 12, Ui.Secondary);
     private readonly TextBlock status = Ui.Label("", 12, Ui.Secondary);
-    private readonly StackPanel pages = new() { Orientation = Orientation.Horizontal, Margin = new Thickness(9, 0, 0, 0) };
+    private readonly Image toolbarMark = new()
+    {
+        Width = 27, Height = 27, Stretch = Stretch.Uniform, Margin = new Thickness(0, 0, 9, 0),
+        VerticalAlignment = VerticalAlignment.Center, IsHitTestVisible = false
+    };
+    private readonly StackPanel pages = new()
+    {
+        Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Center,
+        VerticalAlignment = VerticalAlignment.Bottom, Margin = new Thickness(0, 0, 0, 90)
+    };
     private readonly TextBlock pageLabel = Ui.Label("", 12);
     private readonly Button previousPage;
     private readonly Button nextPage;
@@ -43,6 +57,7 @@ internal sealed partial class MainWindow : Window
     private Button? sheetAction;
     private Workspace current = null!;
     private bool designer;
+    private DesignerPane designerPane;
     private bool disposed;
     private RatingSystem? ratingSystem;
     private MarkRole markRole;
@@ -51,10 +66,10 @@ internal sealed partial class MainWindow : Window
     {
         profilesDirectory = profileDirectory ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Cartrest", "Consoles");
         Title = "Cartrest";
-        Width = 1280;
-        Height = 850;
+        Width = 1180;
+        Height = 790;
         MinWidth = 850;
-        MinHeight = 570;
+        MinHeight = 600;
         WindowStartupLocation = WindowStartupLocation.CenterScreen;
         Background = Ui.Window;
         FontFamily = new FontFamily("Segoe UI");
@@ -62,7 +77,19 @@ internal sealed partial class MainWindow : Window
         UseLayoutRounding = true;
         SnapsToDevicePixels = true;
         TextOptions.SetTextFormattingMode(this, TextFormattingMode.Display);
-        Icon = IconFromExecutable();
+        Icon = LoadImage("Cartrest.ico");
+        toolbarMark.Source = LoadImage("Cartrest-Mark.png");
+        RenderOptions.SetBitmapScalingMode(toolbarMark, BitmapScalingMode.HighQuality);
+        tabs = new SegmentBar<Workspace>("Console workspaces", w => w.Profile.Name, Select, console: true);
+        viewSelector = new SegmentBar<bool>("Workspace", value => value ? "Label Designer" : "Coaster & Sheet", ShowDesigner)
+        {
+            HorizontalAlignment = HorizontalAlignment.Center
+        };
+        viewSelector.Load([false, true], false);
+        proofModes = new SegmentBar<ProofMode>("Preview mode", ProofCaption, SetMode, expanded: true);
+        proofModes.Load(Enum.GetValues<ProofMode>(), ProofMode.Coaster);
+        designerModes = new SegmentBar<DesignerPane>("Label Designer section", DesignerCaption, SetDesignerPane, expanded: true);
+        designerModes.Load(Enum.GetValues<DesignerPane>(), DesignerPane.Artwork);
         catalog = new LabelCatalog(Path.Combine(ResourcesDirectory, "Labels"));
         refresh = new DispatcherTimer(DispatcherPriority.Background) { Interval = TimeSpan.FromMilliseconds(65) };
         refresh.Tick += (_, _) =>
@@ -74,111 +101,142 @@ internal sealed partial class MainWindow : Window
         var host = new Grid { Background = Ui.Window };
         host.RowDefinitions.Add(new() { Height = GridLength.Auto });
         host.RowDefinitions.Add(new() { Height = new GridLength(1, GridUnitType.Star) });
-        host.RowDefinitions.Add(new() { Height = GridLength.Auto });
         host.Children.Add(new Border { Child = Header(), BorderThickness = new Thickness(0, 0, 0, 1), BorderBrush = Ui.Edge });
 
-        var workspaceGrid = new Grid { Margin = new Thickness(14, 13, 14, 10) };
-        workspaceGrid.ColumnDefinitions.Add(new() { Width = new(1, GridUnitType.Star) });
-        workspaceGrid.ColumnDefinitions.Add(new() { Width = new(350) });
-        workspaceGrid.Children.Add(proof);
+        var workspaceGrid = new Grid();
+        workspaceGrid.ColumnDefinitions.Add(new() { Width = new(1, GridUnitType.Star), MinWidth = 420 });
+        workspaceGrid.ColumnDefinitions.Add(new() { Width = new(373), MinWidth = 334, MaxWidth = 465 });
         Grid.SetRow(workspaceGrid, 1);
         host.Children.Add(workspaceGrid);
+
         proof.Children.Add(mat);
         proof.Children.Add(orbit);
-        proof.Children.Add(Meter());
+        proof.Children.Add(display);
+        proof.Children.Add(pages);
+        workspaceGrid.Children.Add(proof);
 
-        var inspector = new DockPanel { Margin = new Thickness(10, 11, 10, 4) };
+        var inspector = new DockPanel { Background = Ui.Panel };
         var topTools = new StackPanel();
-        topTools.Children.Add(viewSelector);
-        topTools.Children.Add(modes);
+        topTools.Children.Add(InspectorStrip(viewSelector, 10));
+        var secondaryModes = new Grid();
+        secondaryModes.Children.Add(proofModes);
+        secondaryModes.Children.Add(designerModes);
+        topTools.Children.Add(InspectorStrip(secondaryModes, 10));
         DockPanel.SetDock(topTools, Dock.Top);
         inspector.Children.Add(topTools);
-        DockPanel.SetDock(exportBar, Dock.Bottom);
-        inspector.Children.Add(exportBar);
+
+        var footer = new StackPanel();
+        Ui.Add(footer, printSummary, 4);
+        Ui.Add(footer, pixelSummary, 8);
+        Ui.Add(footer, exportBar, 0);
+        status.Visibility = Visibility.Collapsed;
+        status.Margin = new Thickness(0, 7, 0, 0);
+        AutomationProperties.SetLiveSetting(status, AutomationLiveSetting.Polite);
+        footer.Children.Add(status);
+        var footerFrame = new Border
+        {
+            Child = footer, Background = Appearance.Brush("Footer"),
+            BorderBrush = Ui.Edge, BorderThickness = new Thickness(0, 1, 0, 0),
+            Padding = new Thickness(15, 10, 14, 10)
+        };
+        DockPanel.SetDock(footerFrame, Dock.Bottom);
+        inspector.Children.Add(footerFrame);
+
+        tools.Margin = new Thickness(15, 0, 12, 0);
         scroll = new ScrollViewer
         {
             Content = tools,
             VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
-            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
-            Padding = new Thickness(0, 0, 3, 0)
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled
         };
         scroll.Resources[typeof(ScrollBar)] = Ui.ScrollbarStyle();
         inspector.Children.Add(scroll);
         var inspectorFrame = new Border
         {
-            Margin = new Thickness(10, 0, 0, 0), Child = inspector, Background = Ui.Panel,
-            BorderBrush = Ui.Edge, BorderThickness = new Thickness(1), CornerRadius = new CornerRadius(11)
+            Child = inspector, BorderBrush = Ui.Edge, BorderThickness = new Thickness(1, 0, 0, 0)
         };
         Grid.SetColumn(inspectorFrame, 1);
         workspaceGrid.Children.Add(inspectorFrame);
+
+        var splitter = new GridSplitter
+        {
+            Width = 6, HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Stretch,
+            ResizeDirection = GridResizeDirection.Columns, ResizeBehavior = GridResizeBehavior.CurrentAndNext,
+            Background = Brushes.Transparent
+        };
+        AutomationProperties.SetName(splitter, "Resize the inspector");
+        workspaceGrid.Children.Add(splitter);
 
         previousPage = Ui.Button("‹", () => SetPage(current.Page - 1));
         nextPage = Ui.Button("›", () => SetPage(current.Page + 1));
         AutomationProperties.SetName(previousPage, "Previous A4 page");
         AutomationProperties.SetName(nextPage, "Next A4 page");
         pageLabel.VerticalAlignment = VerticalAlignment.Center;
-        pageLabel.Margin = new Thickness(0, 0, 6, 0);
+        pageLabel.Margin = new Thickness(0, 0, 7, 0);
+        pageLabel.Foreground = Brushes.White;
         pages.Children.Add(previousPage);
         pages.Children.Add(pageLabel);
         pages.Children.Add(nextPage);
-        status.Margin = new Thickness(17, 0, 17, 9);
-        AutomationProperties.SetLiveSetting(status, AutomationLiveSetting.Polite);
-        Grid.SetRow(status, 2);
-        host.Children.Add(status);
+
         Content = host;
 
         PreviewKeyDown += KeyboardShortcuts;
         Closed += (_, _) => DisposeWorkspace();
         LoadProfiles();
+        tabs.Load(workspaces, workspaces[0]);
         Select(workspaces[0]);
     }
 
-    private System.Windows.Controls.Panel Header()
+    private Panel Header()
     {
-        var header = new DockPanel { MinHeight = 70, LastChildFill = true, Background = Ui.Panel };
-        var icon = new Image { Width = 34, Height = 34, Source = Icon, Margin = new Thickness(0, 0, 10, 0) };
-        var brand = Ui.Label("Cartrest", 21, Ui.Text, true);
+        var header = new Grid { MinHeight = 53, Background = Appearance.Brush("Toolbar") };
+        header.ColumnDefinitions.Add(new() { Width = new GridLength(145) });
+        header.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) });
+        header.ColumnDefinitions.Add(new() { Width = new GridLength(145) });
+        var brand = Ui.Label("Cartrest", 17, Ui.Text, true);
         brand.VerticalAlignment = VerticalAlignment.Center;
-        var brandRow = Ui.Row(icon, brand);
-        brandRow.Margin = new Thickness(18, 0, 0, 0);
-        DockPanel.SetDock(brandRow, Dock.Left);
+        var brandRow = Ui.Row(toolbarMark, brand);
+        brandRow.Margin = new Thickness(16, 0, 0, 0);
+        brandRow.VerticalAlignment = VerticalAlignment.Center;
         header.Children.Add(brandRow);
-        var import = Ui.Button("Import profile…", ImportProfile);
-        import.Margin = new Thickness(10, 0, 17, 0);
+
+        var scroller = new ScrollViewer
+        {
+            Content = tabs, MaxHeight = 49, VerticalAlignment = VerticalAlignment.Center,
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Disabled,
+            HorizontalContentAlignment = HorizontalAlignment.Center
+        };
+        Grid.SetColumn(scroller, 1);
+        header.Children.Add(scroller);
+        var import = Ui.IconButton("\uE710", "Import profile…", ImportProfile);
+        import.HorizontalAlignment = HorizontalAlignment.Right;
         import.VerticalAlignment = VerticalAlignment.Center;
-        DockPanel.SetDock(import, Dock.Right);
+        import.Margin = new Thickness(0, 0, 16, 0);
+        Grid.SetColumn(import, 2);
         header.Children.Add(import);
-        tabs.VerticalAlignment = VerticalAlignment.Center;
-        header.Children.Add(tabs);
         return header;
     }
 
-    private UIElement Meter()
+    private static Border InspectorStrip(UIElement child, double verticalPadding) => new()
     {
-        var lights = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
-        lights.Children.Add(measurement);
-        lights.Children.Add(measureDetail);
-        var meter = new Border
-        {
-            HorizontalAlignment = HorizontalAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Bottom,
-            Padding = new Thickness(16, 8, 12, 9),
-            Margin = new Thickness(0, 0, 0, 22),
-            CornerRadius = new CornerRadius(10),
-            BorderThickness = new Thickness(1),
-            BorderBrush = Ui.Brush("#536D60"),
-            Background = Ui.Brush("#E9182520"),
-            Child = Ui.Row(lights, pages)
-        };
-        return meter;
-    }
+        Child = child, Padding = new Thickness(14, verticalPadding, 14, verticalPadding),
+        BorderBrush = Ui.Edge, BorderThickness = new Thickness(0, 0, 0, 1)
+    };
 
-    private static BitmapSource IconFromExecutable()
+    private static BitmapSource LoadImage(string name) =>
+        BitmapFrame.Create(new Uri($"pack://application:,,,/Resources/{name}", UriKind.Absolute),
+            BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.OnLoad);
+
+    private static string ProofCaption(ProofMode mode) => mode switch
     {
-        var frame = BitmapFrame.Create(new Uri("pack://application:,,,/Resources/Cartrest.ico", UriKind.Absolute),
-            BitmapCreateOptions.None, BitmapCacheOption.OnLoad);
-        return frame;
-    }
+        ProofMode.Coaster => "On the coaster",
+        ProofMode.Cut => "Cut",
+        ProofMode.Sheet => "A4 sheet",
+        _ => "3D"
+    };
+
+    private static string DesignerCaption(DesignerPane pane) => pane == DesignerPane.HeaderAndCode ? "Header & Code" : pane.ToString();
 
     private void LoadProfiles()
     {
@@ -236,6 +294,7 @@ internal sealed partial class MainWindow : Window
                     throw;
                 }
                 workspaces.Add(created);
+                tabs.Load(workspaces, created);
                 Select(created);
                 SetStatus($"Imported {created.Profile.Name}.");
             }
@@ -251,22 +310,10 @@ internal sealed partial class MainWindow : Window
         current = workspace;
         orbit.Reset();
         ratingSystem = null;
-        RefreshNavigation();
+        tabs.Select(workspace);
+        RefreshWorkspaceModes();
         RebuildInspector(resetScroll: true);
         Run(UpdateProof);
-    }
-
-    private void RefreshNavigation()
-    {
-        tabs.Children.Clear();
-        foreach (var workspace in workspaces)
-        {
-            var item = Ui.Button(workspace.Profile.Name, () => Select(workspace), active: workspace == current);
-            item.Padding = new Thickness(17, 8, 17, 8);
-            item.Margin = new Thickness(0, 3, 6, 3);
-            tabs.Children.Add(item);
-        }
-        RefreshWorkspaceModes();
     }
 
     private void ShowDesigner(bool show)
@@ -281,27 +328,20 @@ internal sealed partial class MainWindow : Window
 
     private void RefreshWorkspaceModes()
     {
-        viewSelector.Children.Clear();
-        var edit = Ui.Button("Coaster & Sheet", () => ShowDesigner(false), active: !designer);
-        var label = Ui.Button("Label Designer", () => ShowDesigner(true), active: designer);
-        edit.Margin = label.Margin = new Thickness(0, 0, 5, 8);
-        viewSelector.Children.Add(edit);
-        viewSelector.Children.Add(label);
-        modes.Children.Clear();
-        if (!designer)
-        {
-            foreach (var (mode, title) in new[]
-            {
-                (ProofMode.Coaster, "On the coaster"), (ProofMode.Cut, "Cut"), (ProofMode.Sheet, "A4 sheet"), (ProofMode.ThreeD, "3D")
-            })
-            {
-                var button = Ui.Button(title, () => SetMode(mode), active: current.Mode == mode);
-                button.FontSize = 12;
-                button.Padding = new Thickness(10, 5, 10, 5);
-                button.MinHeight = 28;
-                modes.Children.Add(button);
-            }
-        }
+        viewSelector.Select(designer);
+        proofModes.Visibility = designer ? Visibility.Collapsed : Visibility.Visible;
+        designerModes.Visibility = designer ? Visibility.Visible : Visibility.Collapsed;
+        proofModes.Select(current.Mode);
+        designerModes.Select(designerPane);
+    }
+
+    private void SetDesignerPane(DesignerPane value)
+    {
+        if (designerPane == value)
+            return;
+        designerPane = value;
+        designerModes.Select(value);
+        RebuildInspector(resetScroll: true);
     }
 
     private void SetMode(ProofMode mode)
@@ -327,6 +367,8 @@ internal sealed partial class MainWindow : Window
     {
         double offset = scroll.VerticalOffset;
         tools.Children.Clear();
+        artworkList = null;
+        artworkCount = null;
         exportBar.Children.Clear();
         pngActions.Clear();
         pdfAction = sheetAction = null;
@@ -354,30 +396,32 @@ internal sealed partial class MainWindow : Window
         var settings = current.Settings;
         bool trim = current.HasValidTrim;
         var count = current.Artwork.Sum(a => a.Copies);
+        if (artworkCount is not null)
+            artworkCount.Text = $"{count} {(count == 1 ? "sticker" : "stickers")}";
         var layout = trim ? PrintLayout.Layout(settings, current.Artwork) : [];
         current.Page = Math.Clamp(current.Page, 0, Math.Max(0, layout.Length - 1));
         pages.Visibility = !designer && current.Mode == ProofMode.Sheet && layout.Length > 1 ? Visibility.Visible : Visibility.Collapsed;
         pageLabel.Text = $"{current.Page + 1} / {layout.Length}";
         previousPage.IsEnabled = current.Page > 0;
         nextPage.IsEnabled = current.Page + 1 < layout.Length;
-        string trimSize = $"{settings.Label.Width:0.##} × {settings.Label.Height:0.##} mm";
         double scale = current.Profile.Scale(current.Width);
         var body = current.Profile.Geometry.Body;
-        measurement.Text = designer ? trimSize : current.Mode switch
-        {
-            ProofMode.Coaster or ProofMode.ThreeD => $"{current.Width:0.##} × {body.Height * scale:0.##} × {body.Thickness * scale:0.##} mm",
-            ProofMode.Cut => trimSize,
-            _ => "210 × 297 mm"
-        };
-        measureDetail.Text = !trim ? "Check custom trim dimensions" : designer || current.Mode == ProofMode.Cut
-            ? $"{settings.Bleed:0.##} mm bleed  ·  {settings.PixelWidth} × {settings.PixelHeight} px"
-            : current.Mode switch
-            {
-                ProofMode.Sheet => $"{count} {(count == 1 ? "label" : "labels")}  ·  {layout.Length} {(layout.Length == 1 ? "page" : "pages")}",
-                ProofMode.ThreeD => "Drag to rotate  ·  Scroll to zoom",
-                _ => $"{current.SelectedArtwork?.Name ?? "Empty recess"}  ·  {trimSize} trim"
-            };
+        var trimSize = Dimensions(settings.Label.Width, settings.Label.Height);
+        var bleedSize = Dimensions(settings.Width, settings.Height);
+        if (!trim)
+            display.Update(("Sticker cut", "Check trim dimensions"));
+        else if (designer)
+            display.Update(("Sticker cut", trimSize), ("Bleed per edge", $"{settings.Bleed:0.##} mm"));
+        else if (current.Mode == ProofMode.Sheet)
+            display.Update(("A4 sheet", "210 × 297 mm"), ("Labels", count.ToString()), ("Pages", layout.Length.ToString()));
+        else if (current.Mode == ProofMode.ThreeD)
+            display.Update(("Coaster", Dimensions(current.Width, body.Height * scale)), ("Thickness", $"{body.Thickness * scale:0.##} mm"));
+        else if (current.Mode == ProofMode.Cut)
+            display.Update(("Sticker cut", trimSize), ("Artwork with bleed", bleedSize));
+        else
+            display.Update(("Coaster", Dimensions(current.Width, body.Height * scale)), ("Sticker cut", trimSize), ("Artwork with bleed", bleedSize));
 
+        UpdateFooter(settings, layout.Length, count, trim);
         var raster = trim && settings.CanRasterize;
         foreach (var button in pngActions)
             button.IsEnabled = raster && (designer || current.SelectedArtwork is not null);
@@ -391,11 +435,11 @@ internal sealed partial class MainWindow : Window
         if (threeD)
             orbit.Display(current);
         BitmapSource? image = null;
-        mat.Paper = !designer && current.Mode == ProofMode.Sheet;
+        bool paper = !designer && current.Mode == ProofMode.Sheet;
         if (designer && trim)
         {
             using var label = LabelRenderer.Render(current.Draft, catalog, settings, previewLimit: 860);
-            image = ProofRenderer.BitmapSource(label);
+            image = ProofRenderer.RenderDesign(label, settings);
         }
         else if (!designer && !threeD)
         {
@@ -407,7 +451,33 @@ internal sealed partial class MainWindow : Window
                 _ => null
             };
         }
-        mat.Update(current.Profile.Palette, image);
+        double physicalWidth = designer ? settings.Width : current.Mode switch
+        {
+            ProofMode.Coaster => (body.Width + 2 * ProofRenderer.CoasterPadding) * scale,
+            ProofMode.Cut => settings.Width + 2 * ProofRenderer.CutPadding,
+            ProofMode.Sheet => PrintLayout.PageWidth,
+            _ => current.Width
+        };
+        mat.Update(current.Profile.Palette, image, physicalWidth, paper, pages.Visibility == Visibility.Visible);
+    }
+
+    private static string Dimensions(double width, double height) => $"{width:0.##} × {height:0.##} mm";
+
+    private void UpdateFooter(PrintSettings settings, int pageCount, int count, bool trim)
+    {
+        int capacity = trim ? PrintLayout.PageCapacity(settings) : 0;
+        printSummary.Text = designer ? $"Label proof · {settings.Dpi} dpi"
+            : capacity > 0
+                ? $"{capacity} per sheet · {pageCount} A4 {(pageCount == 1 ? "page" : "pages")}"
+                : "Artwork size exceeds A4";
+        if (!trim)
+            printSummary.Text = "Check the custom trim dimensions";
+        else if (count > 0 && pageCount == 0 && capacity > 0 && !designer)
+            printSummary.Text = "Choose up to 24 labels per export";
+
+        pixelSummary.Text = trim && settings.CanRasterize
+            ? $"{settings.PixelWidth:N0} × {settings.PixelHeight:N0} px per artwork with bleed"
+            : "Adjust the print dimensions or resolution";
     }
 
     private void KeyboardShortcuts(object sender, KeyEventArgs args)
@@ -449,7 +519,9 @@ internal sealed partial class MainWindow : Window
     private void SetStatus(string message, bool error = false)
     {
         status.Text = message;
-        status.Foreground = error ? Ui.Brush("#FFC0AF") : Ui.Secondary;
+        status.Foreground = Appearance.Brush(error ? "Error" : "Secondary");
+        status.Visibility = string.IsNullOrWhiteSpace(message) ? Visibility.Collapsed : Visibility.Visible;
+        FrameworkElementAutomationPeer.FromElement(status)?.RaiseAutomationEvent(AutomationEvents.LiveRegionChanged);
     }
 
     private void DisposeWorkspace()

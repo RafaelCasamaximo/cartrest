@@ -2,6 +2,8 @@ using System.IO;
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
+using System.Windows.Media;
+using System.Windows.Threading;
 using Cartrest.Core;
 using Microsoft.Win32;
 
@@ -9,63 +11,96 @@ namespace Cartrest.Windows;
 
 internal sealed partial class MainWindow
 {
+    private ListBox? artworkList;
+    private TextBlock? artworkCount;
+
     private void BuildCoasterInspector()
     {
-        var artwork = Ui.Section(tools, "Artwork");
-        Button examples = null!;
-        examples = Ui.Button("Examples…", () => ShowSamples(examples));
-        examples.IsEnabled = Directory.Exists(SampleDirectory()) || current.Profile.SampleArtwork is not null;
-        Ui.Add(artwork, Ui.Row(Ui.Button("Add images…", AddImages, prominent: true), examples));
+        artworkCount = Ui.Label("", 12, Ui.AccentText, true);
+        artworkCount.VerticalAlignment = VerticalAlignment.Center;
+        var artwork = Ui.Section(tools, "Sheet artwork", artworkCount);
+        artworkList = null;
         if (current.Artwork.Count > 0)
         {
             var list = new ListBox
             {
-                MaxHeight = 135,
-                MinHeight = 32,
-                Background = Ui.Input,
-                Foreground = Ui.Text,
-                BorderBrush = Ui.Edge
+                MaxHeight = 175, MinHeight = 46, Padding = new Thickness(0),
+                Background = Brushes.Transparent, BorderThickness = new Thickness(0),
+                Foreground = Ui.Text, ItemContainerStyle = Ui.ArtworkItemStyle(),
+                HorizontalContentAlignment = HorizontalAlignment.Stretch
             };
+            artworkList = list;
+            ScrollViewer.SetHorizontalScrollBarVisibility(list, ScrollBarVisibility.Disabled);
+            list.Resources[typeof(System.Windows.Controls.Primitives.ScrollBar)] = Ui.ScrollbarStyle();
             AutomationProperties.SetName(list, "Sheet artwork");
             foreach (var item in current.Artwork)
             {
-                var line = Ui.Label(item.Name);
-                line.ToolTip = item.Name;
+                var thumbnail = new Image
+                {
+                    Source = ProofRenderer.Thumbnail(item), Width = 38, Height = 38, Stretch = Stretch.UniformToFill
+                };
+                thumbnail.Clip = new RectangleGeometry(new Rect(0, 0, 38, 38), 6, 6);
+                var line = Ui.Label(item.Name, 13, Ui.Text, true);
                 line.TextTrimming = TextTrimming.CharacterEllipsis;
                 line.TextWrapping = TextWrapping.NoWrap;
-                list.Items.Add(line);
+                var dimensions = Ui.Label($"{item.Bitmap.Width:N0} × {item.Bitmap.Height:N0} px", 11, Ui.Secondary);
+                var copy = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
+                copy.Children.Add(line);
+                copy.Children.Add(dimensions);
+                var row = new DockPanel { ToolTip = item.Name };
+                AutomationProperties.SetName(row, item.Name);
+                thumbnail.Margin = new Thickness(0, 0, 8, 0);
+                row.Children.Add(thumbnail);
+                row.Children.Add(copy);
+                list.Items.Add(new ListBoxItem { Content = row });
             }
             list.SelectedIndex = current.Selected;
             list.SelectionChanged += (_, _) =>
             {
                 if (list.SelectedIndex < 0 || list.SelectedIndex == current.Selected)
                     return;
+                var keyboard = list.IsKeyboardFocusWithin;
                 current.Selected = list.SelectedIndex;
                 RebuildInspector();
+                if (keyboard)
+                    Dispatcher.InvokeAsync(RestoreArtworkFocus, DispatcherPriority.Loaded);
             };
-            Ui.Add(artwork, list, 6);
-            if (current.SelectedArtwork is { } image)
-            {
-                Ui.Number(artwork, "Copies on sheet", image.Copies, 1, MaximumCopies(image), v =>
-                    Frame(a => a with { Copies = (int)v }), slider: false, whole: true);
-                Ui.Number(artwork, "Artwork zoom (%)", image.Zoom * 100, 100, 350, v => Frame(a => a with { Zoom = v / 100 }));
-                Ui.Number(artwork, "Horizontal offset (%)", image.PanX * 100, -100, 100, v => Frame(a => a with { PanX = v / 100 }));
-                Ui.Number(artwork, "Vertical offset (%)", image.PanY * 100, -100, 100, v => Frame(a => a with { PanY = v / 100 }));
-                Ui.Add(artwork, Ui.Row(Ui.Button("Reset framing", () =>
-                {
-                    Frame(a => a with { Zoom = 1, PanX = 0, PanY = 0 });
-                    RebuildInspector();
-                }), Ui.Button("Remove", RemoveSelected)), 0);
-            }
+            Ui.Add(artwork, list, 5);
         }
         else
         {
-            Ui.Add(artwork, Ui.Label("Add a label or cover image to start a sheet.", 12, Ui.Secondary), 0);
+            Ui.Add(artwork, Ui.Label("Add a cartridge label or cover image to start a sheet.", 13, Ui.Secondary), 10);
         }
 
-        var size = Ui.Section(tools, "Coaster & trim");
+        Button examples = null!;
+        examples = Ui.Button("Examples…", () => ShowSamples(examples));
+        examples.IsEnabled = Directory.Exists(SampleDirectory()) || current.Profile.SampleArtwork is not null;
+        var add = Ui.Button("Add images…", AddImages);
+        var actions = Ui.Actions(add, examples);
+        if (current.SelectedArtwork is not null)
+            actions.Children.Add(Ui.Button("Remove", RemoveSelected));
+        Ui.Add(artwork, actions, 0);
+
+        if (current.SelectedArtwork is { } image)
+        {
+            var reset = Ui.Button("Reset", () =>
+            {
+                Frame(a => a with { Zoom = 1, PanX = 0, PanY = 0 });
+                RebuildInspector();
+            });
+            AutomationProperties.SetName(reset, "Reset artwork framing");
+            var framing = Ui.Section(tools, "Framing", reset);
+            Ui.Number(framing, "Zoom", image.Zoom * 100, 100, 350, v => Frame(a => a with { Zoom = v / 100 }), unit: "%");
+            Ui.Number(framing, "Horizontal", image.PanX * 100, -100, 100, v => Frame(a => a with { PanX = v / 100 }), unit: "%");
+            Ui.Number(framing, "Vertical", image.PanY * 100, -100, 100, v => Frame(a => a with { PanY = v / 100 }), unit: "%");
+            Ui.Number(framing, "Copies of this artwork", image.Copies, 1, MaximumCopies(image), v =>
+                Frame(a => a with { Copies = (int)v }), slider: false, whole: true);
+        }
+
+        PrintControls(Ui.Section(tools, "Printing"));
+        var size = Ui.Section(tools, "Model dimensions");
         var range = current.Profile.WidthRange;
-        Ui.Number(size, "Coaster width (mm)", current.Width, range.Min, range.Max, x => Changed(() => current.Width = x));
+        Ui.Number(size, "Coaster width", current.Width, range.Min, range.Max, x => Changed(() => current.Width = x), unit: "mm");
         var check = new CheckBox { Content = "Custom print trim", Foreground = Ui.Text, IsChecked = current.CustomTrim };
         check.Click += (_, _) =>
         {
@@ -90,17 +125,25 @@ internal sealed partial class MainWindow
         if (current.Mode == ProofMode.ThreeD)
             Ui.Add(size, Ui.Button("Reset 3D view", orbit.Reset), 0);
 
-        PrintControls(Ui.Section(tools, "Print settings"));
         pdfAction = Ui.Button("Save A4 PDF…", SavePdf, prominent: true);
         var png = Ui.Button("Save PNG…", SavePng);
         pngActions.Add(png);
-        Ui.Add(exportBar, Ui.Row(pdfAction, png, Ui.Button("Export STL…", SaveStl)), 0);
+        Ui.Add(exportBar, Ui.Actions(pdfAction, png, Ui.Button("Export STL…", SaveStl)), 0);
     }
 
     private void PrintControls(Panel panel)
     {
-        Ui.Number(panel, "Bleed per edge (mm)", current.Bleed, 0, 10, x => Changed(() => current.Bleed = x), false);
-        Ui.Number(panel, "Resolution (dpi)", current.Dpi, 72, 1200, x => Changed(() => current.Dpi = (int)x), false, whole: true);
+        Ui.Number(panel, "Resolution", current.Dpi, 72, 1200, x => Changed(() => current.Dpi = (int)x), false, whole: true, unit: "dpi");
+        Ui.Number(panel, "Bleed per edge", current.Bleed, 0, 10, x => Changed(() => current.Bleed = x), false, unit: "mm");
+    }
+
+    private void RestoreArtworkFocus()
+    {
+        if (artworkList?.SelectedItem is ListBoxItem selected)
+        {
+            selected.BringIntoView();
+            selected.Focus();
+        }
     }
 
     private void Changed(Action change)

@@ -22,7 +22,7 @@ internal sealed class OrbitView : Grid
         Focusable = true;
         Background = Brushes.Transparent;
         Cursor = Cursors.SizeAll;
-        Margin = new Thickness(0, 0, 0, 57);
+        Margin = new Thickness(0, 0, 0, MeasurementDisplay.PreviewClearance);
         AutomationProperties.SetName(this, "Rotatable cartridge model");
         AutomationProperties.SetHelpText(this, "Drag or use arrow keys to rotate. Scroll or use plus and minus to zoom. Home resets the view.");
         cartridge.Transform = new RotateTransform3D(rotation);
