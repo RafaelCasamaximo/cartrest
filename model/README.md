@@ -48,6 +48,19 @@ python3 model/generate_models.py --console switch --width 90 --output dist/switc
 
 The four built-in profiles support widths from **60 to 180 mm**. Pass `--profile /path/to/console.json` with `--output` to generate a model from a community profile. Each output directory holds the coaster, fit test, and corresponding dimensions.
 
+## Coaster holders
+
+Set **Coaster width** in the editor, then open **Coaster holder**. Every slot fits the current console and width. Set the slot count and the clearance per side to suit your print. The default is four slots with **0.5 mm clearance per side**. Increasing the clearance by 0.1 mm adds 0.2 mm to both interior slot dimensions.
+
+Use **Save Holder STL…** and import the file at **100%** scale with the flat base on the build plate. The guides use a beveled opening and can print without supports in this orientation. Slide each coaster in vertically with its bottom edge first. Compare the displayed outside dimensions with the usable build area before slicing. A four-slot holder for 100 mm DS coasters measures **107.40 × 77.70 × 39.26 mm**.
+
+For command-line export, pass `--holder-slots` to generate the holder STL. These commands reproduce the downloadable examples. [Four-slot DS STL](holders/cartrest-ds-holder-4slots-100mm.stl) · [Six-slot 3DS STL](holders/cartrest-3ds-holder-6slots-90mm.stl)
+
+```sh
+python3 model/generate_models.py --console ds --width 100 --holder-slots 4 --output dist/holders
+python3 model/generate_models.py --console 3ds --width 90 --holder-slots 6 --holder-clearance 0.6 --output dist/holders
+```
+
 ## Model sources
 
 The nominal measurements and model instructions are defined in `consoles/`. Cartrest bundles those profiles and generates the STL directly. The downloadable DS files are in `model/`. The other files are in `model/3ds/`, `model/switch/`, and `model/switch2/`. [Profile authoring guide](../consoles/README.md) · [Generator](generate_models.py) · [DS dimensions](dimensions.json) · [3DS dimensions](3ds/dimensions.json) · [Switch dimensions](switch/dimensions.json) · [Switch 2 dimensions](switch2/dimensions.json)

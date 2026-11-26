@@ -4,7 +4,7 @@
 
 <h1 align="center">Cartrest</h1>
 
-<p align="center">3D-printable cartridge coasters and native macOS and Windows editors for vinyl labels.</p>
+<p align="center">3D-printable cartridge coasters and holders, with native macOS and Windows editors for vinyl labels.</p>
 
 <p align="center">
   <strong><a href="https://github.com/RafaelCasamaximo/cartrest/releases/latest">Download for macOS</a></strong>
@@ -118,6 +118,27 @@ For a custom size, set **Coaster width (mm)** under **Model dimensions**, then s
 
 Import the STL in millimeters at 100% scale, with the label face up. On the Creality K2 SE with a 0.4 mm nozzle, the 0.20 mm PLA preset is a starting point. Print the small fit test to check the recess and label clearance before committing to the full coaster. [Model and slicing guide](model/README.md)
 
+## Store the coasters
+
+Slide each coaster into its own slot from above, bottom edge first. The beveled guides follow the lower outline and thickness of the scaled coaster and leave the upper tab of the 3DS cartridge clear.
+
+<p align="center">
+  <img src="docs/images/coaster-holder-ds.png" width="680" alt="Four-slot Nintendo DS holder with two coasters in the rear slots and the front slots empty.">
+</p>
+
+| Console | Coaster width | Slots | Clearance per side | Holder width × depth × height | File |
+| --- | --- | --- | --- | --- | --- |
+| Nintendo DS | 100 mm | 4 | 0.5 mm | 107.40 × 77.70 × 39.26 mm | [STL](model/holders/cartrest-ds-holder-4slots-100mm.stl) |
+| Nintendo 3DS | 90 mm | 6 | 0.6 mm | 92.70 × 92.87 × 33.89 mm | [STL](model/holders/cartrest-3ds-holder-6slots-90mm.stl) |
+
+To generate a holder for any console profile, use a current source build of the macOS or Windows app. [Build from source](#build-from-source)
+
+1. Open **Coaster & Sheet**, select a console, and set **Coaster width** under **Model dimensions**.
+2. Open **Coaster holder**, choose **1–24 slots**, and adjust **Clearance per side** as needed. The defaults are four slots and 0.5 mm per side.
+3. Select **Save Holder STL…** and import the model at **100%** scale with its flat base on the build plate.
+
+The same options are available from the command line. [Holder printing and export guide](model/README.md#coaster-holders)
+
 ## Add a console or a variation
 
 1. Copy a profile such as [ds.json](consoles/ds.json) and choose a unique ID and tab name.
@@ -153,7 +174,7 @@ For distribution signing, set `CARTREST_CODESIGN_IDENTITY` to a Developer ID App
 | `design/labels/` | Source-linked cartridge mastheads, ratings, logos, and designer templates |
 | `examples/` | Original retail scans, importable artwork, and source links |
 | `print/` | Full-size A4 sheets for box covers and cartridge labels |
-| `docs/images/` | App screenshots |
+| `docs/images/` | App screenshots and model previews |
 
 The A4 preview uses the same placement calculations as the PDF export. The app and the command-line model generator read the same console profiles. Command-line builds bundle a static `.icns` made from the Liquid Glass export. [Icon Composer project](design/icon/Cartrest.icon) · [SVG source](design/icon/Cartrest.svg) · [Icon editing and export](design/icon/README.md) · [Design notes](DESIGN.md)
 

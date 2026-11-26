@@ -6,10 +6,7 @@ enum CartridgeModel {
     static func build(from profile: ConsoleProfile) throws -> CartridgeSTL {
         let geometry = profile.geometry
         let body = geometry.body
-        let face = CGRect(x: 0, y: 0, width: body.width, height: body.height)
-        let radii = body.cornerRadii
-        let outer = body.vertices.map { Outline($0.map { Point($0.x, $0.y) }) }
-            ?? .rounded(face, radii: [radii.topLeft, radii.topRight, radii.bottomRight, radii.bottomLeft])
+        let outer = Outline.body(body)
         try outer.validate(width: body.width, height: body.height)
 
         let cuts = try FaceCuts(profile)
@@ -39,6 +36,16 @@ enum CartridgeModel {
         Wall.triangulate(walls, into: &triangles)
         return try CartridgeSTL(triangles: triangles)
     }
+
+    static func lowerBodyWidth(_ body: Geometry.Body, from y: Double) -> Double {
+        let outline = Outline.body(body)
+        // Include the cut through any edge crossing the top of the guide.
+        var xs = outline.points.filter { $0.y >= y }.map(\.x)
+        if let slice = outline.span(at: y) {
+            xs.append(contentsOf: [slice.left, slice.right])
+        }
+        return (xs.max() ?? 0) - (xs.min() ?? 0)
+    }
 }
 
 private typealias Point = SIMD2<Double>
@@ -65,6 +72,13 @@ private struct Outline {
 
     private var segments: [(Point, Point)] {
         points.indices.map { index in (points[index], points[(index + 1) % points.count]) }
+    }
+
+    static func body(_ body: Geometry.Body) -> Outline {
+        let face = CGRect(x: 0, y: 0, width: body.width, height: body.height)
+        let radii = body.cornerRadii
+        return body.vertices.map { Outline($0.map { Point($0.x, $0.y) }) }
+            ?? .rounded(face, radii: [radii.topLeft, radii.topRight, radii.bottomRight, radii.bottomLeft])
     }
 
     static func rounded(_ recess: Geometry.Recess) -> Outline {

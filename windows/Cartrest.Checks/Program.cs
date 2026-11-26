@@ -13,7 +13,12 @@ foreach (var id in profiles)
     var profile = Profile.Load(Path.Combine(root, "consoles", id + ".json"));
     var mesh = CartridgeMesh.Build(profile);
     foreach (double width in new[] { profile.WidthRange.Min, profile.Geometry.Body.Width, profile.WidthRange.Max })
+    {
         ValidateStl(mesh, width, profile);
+        ValidateHolderStl(profile, width, CoasterHolder.MinimumSlots, CoasterHolder.MinimumClearance);
+        ValidateHolderStl(profile, width, CoasterHolder.DefaultSlots, CoasterHolder.DefaultClearance);
+        ValidateHolderStl(profile, width, CoasterHolder.MaximumSlots, CoasterHolder.MaximumClearance);
+    }
     // Compare the app mesh with the shipped reference at nominal scale.
     string reference = Path.Combine(root, "model", id == "ds" ? "" : id, $"cartrest-{id}-100mm.stl");
     using var nominal = new MemoryStream();
@@ -23,7 +28,7 @@ foreach (var id in profiles)
     var b = MeasureStl(original);
     Require(Math.Abs(a.Volume - b.Volume) / b.Volume < 0.00002, $"{id} mesh volume differs from the reference.");
     Require(a.Size == b.Size, $"{id} mesh bounds differ from the reference.");
-    Console.WriteLine($"{id}: closed mesh at all supported test widths, {a.Count} triangles, reference volume matched.");
+    Console.WriteLine($"{id}: closed coaster and holder meshes at all test widths, {a.Count} coaster triangles, reference volume matched.");
 }
 
 string graph = Path.Combine(root, "examples", "profiles", "ds-graphite.json");
@@ -89,6 +94,27 @@ static void ValidateStl(CartridgeMesh mesh, double width, Profile profile)
     var scale = profile.Scale(width);
     Require(Math.Abs(measured.Size.X - width) < .001 && Math.Abs(measured.Size.Y - body.Height * scale) < .001 &&
         Math.Abs(measured.Size.Z - body.Thickness * scale) < .001, $"The {profile.Id} STL did not scale all three axes.");
+}
+
+static void ValidateHolderStl(Profile profile, double width, int slots, double clearance)
+{
+    var holder = new CoasterHolder(profile, width, slots, clearance);
+    var body = profile.Geometry.Body;
+    double scale = profile.Scale(width);
+    // The 3DS tab sits above the guides and should contribute nothing to slot width.
+    double lowerWidth = profile.Id == "3ds" ? 94.5559 : body.Width;
+    Require(Math.Abs(holder.SlotWidth - lowerWidth * scale - 2 * clearance) < .001 &&
+        Math.Abs(holder.SlotDepth - body.Thickness * scale - 2 * clearance) < .001,
+        $"The {profile.Id} slot did not fit the lower outline and scaled thickness.");
+    double endFoot = Math.Max(10, body.Height * scale * 0.14);
+    double depth = 2 * endFoot + (slots + 1) * 4 + slots * holder.SlotDepth;
+
+    using var stream = new MemoryStream();
+    holder.WriteStl(stream);
+    var (size, volume, _) = MeasureStl(stream);
+    Require(Math.Abs(size.X - holder.Width) < .001 && Math.Abs(size.Y - depth) < .001 &&
+        Math.Abs(size.Z - holder.Height) < .001 && volume > 0,
+        $"The {profile.Id} holder failed to export one rack with {slots} slots at {width:g} mm.");
 }
 
 static (Vector3 Size, double Volume, uint Count) MeasureStl(Stream stream)

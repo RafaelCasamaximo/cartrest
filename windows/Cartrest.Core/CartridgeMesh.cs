@@ -58,12 +58,17 @@ public sealed class CartridgeMesh
     {
         float factor = (float)profile.Scale(width);
         var scaled = Triangles.Select(triangle => triangle.Scale(factor)).ToArray();
-        // STL stores float32 coordinates. Validate after scaling at that precision.
-        ValidateSolid(scaled);
+        WriteStl(destination, scaled, "Cartrest | millimeters | label face up");
+    }
+
+    internal static void WriteStl(Stream destination, IReadOnlyList<Triangle> triangles, string header)
+    {
+        // STL stores float32 coordinates. Validate the geometry at that precision.
+        ValidateSolid(triangles);
         using var writer = new BinaryWriter(destination, Encoding.ASCII, leaveOpen: true);
-        writer.Write(Encoding.ASCII.GetBytes("Cartrest | millimeters | label face up".PadRight(80)));
-        writer.Write((uint)scaled.Length);
-        foreach (var triangle in scaled)
+        writer.Write(Encoding.ASCII.GetBytes(header.PadRight(80)));
+        writer.Write((uint)triangles.Count);
+        foreach (var triangle in triangles)
         {
             Write(Vector3.Normalize(triangle.Cross));
             Write(triangle.A);
@@ -78,6 +83,19 @@ public sealed class CartridgeMesh
             writer.Write(point.Y);
             writer.Write(point.Z);
         }
+    }
+
+    internal static double LowerBodyWidth(Body body, double cutoff)
+    {
+        var outline = Outline.ForBody(body);
+        // Include the cut through any edge crossing the top of the guide.
+        var xs = outline.Where(point => point.Y >= cutoff).Select(point => point.X).ToList();
+        if (At(outline, cutoff) is { } span)
+        {
+            xs.Add(span.Left);
+            xs.Add(span.Right);
+        }
+        return xs.Count > 0 ? xs.Max() - xs.Min() : 0;
     }
 
     private static void ValidateBody(Point2[] outer, Body body)

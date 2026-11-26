@@ -10,6 +10,8 @@ internal sealed class Workspace(Profile profile, CartridgeMesh model, LabelDraft
     public CartridgeMesh Model { get; } = model;
     public LabelDraft Draft { get; } = draft;
     public double Width { get; set; } = profile.Geometry.Body.Width;
+    public int HolderSlots { get; set; } = CoasterHolder.DefaultSlots;
+    public double HolderClearance { get; set; } = CoasterHolder.DefaultClearance;
     public double Bleed { get; set; } = 2;
     public int Dpi { get; set; } = 300;
     public int Selected { get; set; }
@@ -20,6 +22,7 @@ internal sealed class Workspace(Profile profile, CartridgeMesh model, LabelDraft
     public List<Artwork> Artwork { get; } = [];
     public Artwork? SelectedArtwork => Artwork.ElementAtOrDefault(Selected);
     public PrintSettings Settings => new(CustomTrim ? CustomLabel : Profile.LabelAt(Width), Bleed, Dpi);
+    public CoasterHolder Holder => new(Profile, Width, HolderSlots, HolderClearance);
 
     public bool HasValidTrim
     {

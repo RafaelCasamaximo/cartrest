@@ -74,6 +74,9 @@ struct CartrestEditor: View {
     @ViewState private var cameraRevision = 0
     @ViewState private var usesCustomRecess = false
     @ViewState private var showsModelDimensions = true
+    @ViewState private var showsHolder = false
+    @ViewState private var holderSlotCount = CoasterHolder.defaultSlots
+    @ViewState private var holderClearance = CGFloat(CoasterHolder.defaultClearance)
     @ViewState private var coasterWidth: CGFloat
     @ViewState private var customWidth: CGFloat
     @ViewState private var customHeight: CGFloat
@@ -486,9 +489,43 @@ struct CartrestEditor: View {
                 }
                 .padding(.top, 8)
             }
+            if !usesCustomRecess {
+                holderSettings
+            }
             if let errorMessage = preparation.errorMessage {
                 Text(errorMessage).font(.caption).foregroundStyle(.red)
             }
+        }
+    }
+
+    private var holderSettings: some View {
+        let holder = CoasterHolder(profile: console, coasterWidth: coasterWidth, slotCount: holderSlotCount,
+                                   clearance: holderClearance)
+        return DisclosureGroup("Coaster holder", isExpanded: $showsHolder) {
+            VStack(alignment: .leading, spacing: 9) {
+                Stepper(value: $holderSlotCount, in: CoasterHolder.slotRange) {
+                    Text("\(holderSlotCount) \(holderSlotCount == 1 ? "slot" : "slots")").monospacedDigit()
+                }
+                .accessibilityLabel("Holder slots")
+                .accessibilityValue("\(holderSlotCount)")
+                numberField("Clearance per side (mm)", value: $holderClearance)
+                if let holder {
+                    Text("\(decimal(holder.width)) × \(decimal(holder.depth)) × \(decimal(holder.height)) mm")
+                        .font(.caption.monospacedDigit())
+                        .foregroundStyle(.secondary)
+                        .accessibilityLabel("Holder width, depth, and height in millimeters")
+                        .accessibilityValue("\(decimal(holder.width)) by \(decimal(holder.depth)) by \(decimal(holder.height))")
+                } else if !CoasterHolder.clearanceRange.contains(holderClearance) {
+                    Text("Enter a clearance from 0.2 to 1.5 mm per side.")
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                }
+                Button("Save Holder STL…", systemImage: "square.stack.3d.up") {
+                    if let holder { saveHolder(holder) }
+                }
+                .disabled(operation != nil || holder == nil)
+            }
+            .padding(.top, 8)
         }
     }
 
@@ -711,6 +748,13 @@ struct CartrestEditor: View {
         let filename = "\(console.modelFilePrefix)-\(decimal(coasterWidth))mm.stl"
         beginExport(filename, as: UTType(filenameExtension: "stl") ?? .data) { destination in
             try mesh.write(scaledBy: scale, to: destination)
+        }
+    }
+
+    private func saveHolder(_ holder: CoasterHolder) {
+        let filename = "\(console.modelFilePrefix)-holder-\(holder.slotCount)slots-\(decimal(coasterWidth))mm.stl"
+        beginExport(filename, as: UTType(filenameExtension: "stl") ?? .data) { destination in
+            try holder.write(to: destination)
         }
     }
 

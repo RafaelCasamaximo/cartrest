@@ -13,19 +13,20 @@ struct MeshTriangle {
     }
 }
 
-/// One nominal mesh serves both the SceneKit preview and proportional STL export.
+/// A validated binary mesh for the SceneKit preview and STL exports.
 struct CartridgeSTL: Sendable {
     private static let headerSize = 84
     private static let facetSize = 50
     private let data: Data
+    private let header: String
     let facetCount: Int
 
-    init(triangles: [MeshTriangle]) throws {
+    init(triangles: [MeshTriangle], header: String = "Cartrest | millimeters | label face up") throws {
         guard !triangles.isEmpty, let count = UInt32(exactly: triangles.count) else {
             throw STLError.invalidModel
         }
 
-        var output = Data("Cartrest | millimeters | label face up".utf8)
+        var output = Data(header.utf8.prefix(80))
         output.append(Data(repeating: 32, count: 80 - output.count))
         output.appendInteger(count)
         output.reserveCapacity(Self.headerSize + triangles.count * Self.facetSize)
@@ -73,6 +74,7 @@ struct CartridgeSTL: Sendable {
         }
         guard visited.count == triangles.count, volume.isFinite, volume > 0 else { throw STLError.invalidModel }
         data = output
+        self.header = header
         facetCount = triangles.count
     }
 
@@ -89,7 +91,7 @@ struct CartridgeSTL: Sendable {
         }
     }
 
-    func write(scaledBy scale: CGFloat, to destination: URL) throws {
+    func write(scaledBy scale: CGFloat = 1, to destination: URL) throws {
         guard scale.isFinite, scale > 0 else { throw STLError.invalidScale }
         if scale == 1 {
             try data.write(to: destination, options: .atomic)
@@ -102,7 +104,7 @@ struct CartridgeSTL: Sendable {
         forEachFacet { _, a, b, c in
             triangles.append(MeshTriangle(SIMD3<Double>(a) * scale, SIMD3<Double>(b) * scale, SIMD3<Double>(c) * scale))
         }
-        let scaled = try CartridgeSTL(triangles: triangles)
+        let scaled = try CartridgeSTL(triangles: triangles, header: header)
         try scaled.data.write(to: destination, options: .atomic)
     }
 
@@ -147,10 +149,10 @@ private enum STLError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .invalidModel: "The cartridge must form one solid with outward-facing triangles."
+        case .invalidModel: "The model must form one solid with outward-facing triangles."
         case .invalidScale: "Enter a valid coaster width before saving the model."
         case .degenerate: "Some model features are too small to keep distinct vertices at STL precision."
-        case .openMesh: "The cartridge mesh has an open edge or inconsistent face orientation."
+        case .openMesh: "The mesh has an open edge or inconsistent face orientation."
         }
     }
 }

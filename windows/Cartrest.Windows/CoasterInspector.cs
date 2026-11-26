@@ -99,8 +99,14 @@ internal sealed partial class MainWindow
 
         PrintControls(Ui.Section(tools, "Printing"));
         var size = Ui.Section(tools, "Model dimensions");
-        var range = current.Profile.WidthRange;
-        Ui.Number(size, "Coaster width", current.Width, range.Min, range.Max, x => Changed(() => current.Width = x), unit: "mm");
+        var workspace = current;
+        var range = workspace.Profile.WidthRange;
+        var holderDimensions = Ui.Label("", 12, "Secondary");
+        Ui.Number(size, "Coaster width", workspace.Width, range.Min, range.Max, width =>
+        {
+            Changed(() => workspace.Width = width);
+            UpdateHolderDimensions();
+        }, unit: "mm");
         var check = Appearance.Use(new CheckBox { Content = "Custom print trim", IsChecked = current.CustomTrim }, Control.ForegroundProperty, "Text");
         check.Click += (_, _) =>
         {
@@ -125,10 +131,34 @@ internal sealed partial class MainWindow
         if (current.Mode == ProofMode.ThreeD)
             Ui.Add(size, Ui.Button("Reset 3D view", orbit.Reset), 0);
 
+        var holderControls = Ui.Section(tools, "Coaster holder");
+        Ui.Number(holderControls, "Slots", workspace.HolderSlots, CoasterHolder.MinimumSlots, CoasterHolder.MaximumSlots, slots =>
+        {
+            workspace.HolderSlots = (int)slots;
+            UpdateHolderDimensions();
+        }, whole: true);
+        Ui.Number(holderControls, "Clearance per side", workspace.HolderClearance,
+            CoasterHolder.MinimumClearance, CoasterHolder.MaximumClearance, clearance =>
+            {
+                workspace.HolderClearance = clearance;
+                UpdateHolderDimensions();
+            }, slider: false, unit: "mm");
+        UpdateHolderDimensions();
+        Ui.Add(holderControls, holderDimensions);
+        Ui.Add(holderControls, Ui.Button("Save Holder STL…", SaveHolder), 0);
+
         pdfAction = Ui.Button("Save A4 PDF…", SavePdf, prominent: true);
         var png = Ui.Button("Save PNG…", SavePng);
         pngActions.Add(png);
         Ui.Add(exportBar, Ui.Actions(pdfAction, png, Ui.Button("Export STL…", SaveStl)), 0);
+
+        void UpdateHolderDimensions()
+        {
+            var holder = workspace.Holder;
+            holderDimensions.Text = $"{holder.Width:0.##} × {holder.Depth:0.##} × {holder.Height:0.##} mm";
+            AutomationProperties.SetName(holderDimensions,
+                $"Holder width {holder.Width:0.##}, depth {holder.Depth:0.##}, height {holder.Height:0.##} millimeters");
+        }
     }
 
     private void PrintControls(Panel panel)
@@ -291,6 +321,13 @@ internal sealed partial class MainWindow
     private void SaveStl() => Run(() =>
         Save("STL model", "stl", $"cartrest-{current.Profile.Id}-{current.Width:0.###}mm",
             stream => current.Model.WriteStl(stream, current.Width)));
+
+    private void SaveHolder() => Run(() =>
+    {
+        var holder = current.Holder;
+        Save("holder STL", "stl", FormattableString.Invariant($"cartrest-{current.Profile.Id}-holder-{holder.SlotCount}slots-{current.Width:0.###}mm"),
+            holder.WriteStl);
+    });
 
     private void Save(string name, string extension, string stem, Action<Stream> write)
     {

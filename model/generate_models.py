@@ -230,7 +230,7 @@ def build_mesh(outer, height, recesses, rear_recesses=()):
     return triangles
 
 
-def write_stl(path, triangles):
+def write_stl(path, triangles, header=b"Cartrest | millimeters | PLA | label face up"):
     """Validate the serialized coordinates and return a summary of the saved mesh."""
 
     def pack_point(point):
@@ -238,8 +238,7 @@ def write_stl(path, triangles):
         # are distinct in double precision but coincide after serialization.
         return struct.unpack("<3f", struct.pack("<3f", *point))
 
-    header = b"Cartrest | millimeters | PLA | label face up".ljust(80, b" ")
-    payload = bytearray(header + struct.pack("<I", len(triangles)))
+    payload = bytearray(header.ljust(80, b" ") + struct.pack("<I", len(triangles)))
     edges = defaultdict(list)
     volume = 0
     vertices = set()
@@ -408,7 +407,93 @@ def interpret_recipe(profile):
     return dimensions, front, rear
 
 
-def generate(output, width, profile):
+def holder_mesh(body, outline, width, slots, clearance):
+    """Build the base, rails and beveled dividers as one printable solid."""
+    scale = width / body["width"]
+    coaster_height = body["height"] * scale
+    guide_height = min(44, coaster_height * 0.34)
+    cutoff = body["height"] - guide_height / scale
+    # Include the cut through any edge crossing the top of the guide.
+    lower_x = [x for x, y in outline if y >= cutoff]
+    lower_x.extend(x_bounds(outline, cutoff) or ())
+    contact_width = (max(lower_x) - min(lower_x)) * scale if lower_x else 0
+    if contact_width <= 0:
+        raise ValueError("The bottom of the coaster must have a measurable width.")
+
+    wall, divider, base = 3.2, 4.0, 3.2
+    slot_width = contact_width + 2 * clearance
+    slot_depth = body["thickness"] * scale + 2 * clearance
+    fin_reach = min(8, contact_width * 0.08)
+    foot = max(10, coaster_height * 0.14)
+    depth = 2 * foot + slots * (slot_depth + divider) + divider
+    height = base + guide_height
+
+    xs = [0, wall, wall + fin_reach, wall + slot_width - fin_reach,
+          wall + slot_width, slot_width + 2 * wall]
+    ys = [0, foot]
+    for _ in range(slots):
+        opening = ys[-1] + divider
+        ys.extend((opening, opening + slot_depth))
+    ys.extend((depth - foot, depth))
+
+    # The last layer of cells bevels the entry by widening each opening.
+    lead = min(0.8, guide_height / 4)
+    zs = [0, base, height - min(1.6, guide_height / 2), height]
+    top_xs, top_ys = xs.copy(), ys.copy()
+    top_xs[1] -= lead
+    top_xs[4] += lead
+    for y in range(2, len(ys) - 2):
+        top_ys[y] += lead if y % 2 else -lead
+
+    columns, rows, layers = len(xs) - 1, len(ys) - 1, len(zs) - 1
+
+    def vertex(x, y, z):
+        if z == layers:
+            return top_xs[x], top_ys[y], zs[z]
+        return xs[x], ys[y], zs[z]
+
+    def solid(x, y, z):
+        if not (0 <= x < columns and 0 <= y < rows and 0 <= z < layers):
+            return False
+        if z == 0:
+            return True
+        return 0 < y < rows - 1 and (x in (0, columns - 1) or (y % 2 == 1 and x != 2))
+
+    triangles = []
+
+    def face(a, b, c, d):
+        triangles.extend(((a, b, c), (a, c, d)))
+
+    # Emit exposed faces on a shared grid so the base, rails and fins form one mesh.
+    for z in range(layers):
+        for y in range(rows):
+            for x in range(columns):
+                if not solid(x, y, z):
+                    continue
+                a = vertex(x, y, z)
+                b = vertex(x + 1, y, z)
+                c = vertex(x + 1, y + 1, z)
+                d = vertex(x, y + 1, z)
+                e = vertex(x, y, z + 1)
+                f = vertex(x + 1, y, z + 1)
+                g = vertex(x + 1, y + 1, z + 1)
+                h = vertex(x, y + 1, z + 1)
+                if not solid(x, y, z - 1):
+                    face(d, c, b, a)
+                if not solid(x, y, z + 1):
+                    face(e, f, g, h)
+                if not solid(x - 1, y, z):
+                    face(a, e, h, d)
+                if not solid(x + 1, y, z):
+                    face(b, c, g, f)
+                if not solid(x, y - 1, z):
+                    face(a, b, f, e)
+                if not solid(x, y + 1, z):
+                    face(d, h, g, c)
+    return triangles
+
+
+def generate(output, width, profile, *, holder_slots=None, holder_clearance=0.5):
     nominal, front, rear = interpret_recipe(profile)
     body, recess = nominal["body"], nominal["recess"]
     outer = body_outline(body)
@@ -417,6 +502,18 @@ def generate(output, width, profile):
     if any(min(p[i] for p in outer) != 0 or max(p[i] for p in outer) != round(body[axis], 7)
            for i, axis in enumerate(("width", "height"))):
         raise ValueError("The body outline must reach the four declared bounds.")
+
+    if holder_slots is not None:
+        triangles = holder_mesh(body, outer, width, holder_slots, holder_clearance)
+        filename = f"cartrest-{profile['id']}-holder-{holder_slots}slots-{width_suffix(width)}mm.stl"
+        output.mkdir(parents=True, exist_ok=True)
+        with TemporaryDirectory(prefix=".cartrest-holder-", dir=output) as staging_dir:
+            staged = Path(staging_dir) / filename
+            summary = write_stl(staged, triangles, header=b"Cartrest | millimeters | holder base down")
+            staged.replace(output / filename)
+        print(summary)
+        return
+
     coaster = build_mesh(outer, body["thickness"], front, rear)
 
     # The coupon preserves the recess depth and corners, even for a larger custom chamfer.
@@ -461,7 +558,11 @@ def main():
     source.add_argument("--console", choices=profiles, default="ds", help="bundled profile ID (default: ds)")
     source.add_argument("--profile", type=Path, help="path to a community profile JSON")
     parser.add_argument("--width", type=float, help="final width in millimeters (defaults to the profile's nominal width)")
-    parser.add_argument("--output", type=Path, help="directory for the STL meshes and cutting dimensions")
+    parser.add_argument("--output", type=Path, help="directory for the generated files")
+    parser.add_argument("--holder-slots", type=int, metavar="N",
+                        help="generate only a holder with 1–24 slots (default output: dist/holders)")
+    parser.add_argument("--holder-clearance", type=float, metavar="MM",
+                        help="clearance per side for the holder, from 0.2 to 1.5 mm (default: 0.5)")
     options = parser.parse_args()
     defaults = {name: ROOT if name == "ds" else ROOT / name for name in profiles}
 
@@ -474,6 +575,17 @@ def main():
             raise ValueError(f"Width must be between {limits['min']} and {limits['max']} mm.")
         if options.profile and not options.output:
             raise ValueError("Choose an --output directory for a community profile.")
+        clearance = 0.5 if options.holder_clearance is None else options.holder_clearance
+        if options.holder_slots is not None:
+            if not 1 <= options.holder_slots <= 24:
+                raise ValueError("Choose between 1 and 24 holder slots.")
+            if not 0.2 <= clearance <= 1.5:
+                raise ValueError("Choose a clearance from 0.2 to 1.5 mm per side.")
+            generate((options.output or ROOT.parent / "dist" / "holders").resolve(), width, profile,
+                     holder_slots=options.holder_slots, holder_clearance=clearance)
+            return
+        if options.holder_clearance is not None:
+            raise ValueError("Use --holder-clearance with --holder-slots.")
 
         default_directory = defaults[options.console]
         output = options.output or (default_directory if width == nominal_width
